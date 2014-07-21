@@ -43,15 +43,15 @@ def do_job(action, fullpath, collection):
     titles = [title.strip() for title in titles]
     account_lines = AccountLines(titles)
     varify_errors = []
-    line_number = 2
+    line_number = 1
     for eachline in f:
+        line_number += 1
         columns = eachline.split(',')
         columns = [column.strip() for column in columns]
         try:
             account_lines.add_line(columns)
         except Exception, e:
             varify_errors.append(line_number)
-        line_number += 1
     info = 'verified: %d failed: %s' % (line_number, unicode(varify_errors))
     update_information(collection, info)
     if varify_errors:
