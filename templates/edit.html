@@ -34,11 +34,22 @@
 		<div class="col-md-3">
 		  {% for choice in column.choices %}
 		  <label class="checkbox">
-			<input type="checkbox" id="{{column.name}}_choices" name="{{column.name}}_choices" value="{{choice.name}}" checked="{{choice.checked}}"> {{choice.name}}
+			<input type="checkbox" id="{{column.name}}_choices" name="{{column.name}}_choices" value="{{choice.name}}"
+				   {% if choice.checked == "true" %}
+				   checked="true"
+				   {% endif %}
+				   > {{choice.name}}
 		  </label>
 		  {% endfor %}
 		</div>
 	  </div>
+	  {% elif column.type == "textarea" %}
+	  <div class="row">
+		<div class="col-md-3">
+		  <label> {{column.name}} </label>
+		</div>
+		<div class="col-md-3">
+		  <textarea class="form-control">{{column.value}}</textarea>
 	  {% else %}
 	  <div class="row">
 		<label> unsupport type, {{item.type}}, {{item.name}} </label>

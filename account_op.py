@@ -107,4 +107,54 @@ def get_item(primary_key):
     choices.append(choice)
     column['choices'] = choices
     item.append(column)
+    column = {}
+    column['name'] = 'Exception'
+    column['type'] = 'multichoice'
+    choices = []
+    choice = {'name': 'require', 'checked': 'true'}
+    choices.append(choice)
+    column['choices'] = choices
+    item.append(column)
+    column = {}
+    column['name'] = 'IPRecord'
+    column['type'] = 'text'
+    column['value'] = '2014/04/20'
+    item.append(column)
+    column = {}
+    column['name'] = 'ICPRecord1'
+    column['type'] = 'text'
+    column['value'] = ''
+    item.append(column)
+    column = {}
+    column['name'] = 'ICPRecord2'
+    column['type'] = 'text'
+    column['value'] = ''
+    item.append(column)
+    column = {}
+    column['name'] = 'ICPRecord3'
+    column['type'] = 'text'
+    column['value'] = ''
+    item.append(column)
+    column = {}
+    column['name'] = 'Usage'
+    column['type'] = 'text'
+    column['value'] = ''
+    item.append(column)
+    column = {}
+    column['name'] = 'KnownIssues'
+    column['type'] = 'multichoice'
+    choices = []
+    choice = {'name': 'Issue A', 'checked': 'true'}
+    choices.append(choice)
+    choice = {'name': 'Issue B', 'checked': ''}
+    choices.append(choice)
+    choice = {'name': 'Issue C', 'checked': 'true'}
+    choices.append(choice)
+    column['choices'] = choices
+    item.append(column)
+    column = {}
+    column['name'] = 'OpenIssues'
+    column['type'] = 'textarea'
+    column['value'] = 'abc\ndef\nmn'
+    item.append(column)
     return item
