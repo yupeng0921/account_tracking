@@ -1,0 +1,66 @@
+{
+    "AccountId" : {
+        "Type" : "String",
+        "Pattern" : "[0-9]{12}"
+    },
+    "EMail" : {
+        "Type" : "String",
+        "Pattern" : "\\w+@\\w+",
+        "IsPrimary" : "yes"
+    },
+    "CustomerName" : {
+        "Type" : "String"
+    },
+    "Segment" : {
+        "Type" : "String"
+    },
+    "AccountManager" : {
+        "Type" : "List"
+    },
+    "KickoffMeeting" : {
+        "Type" : "TimeEvent",
+        "DefaultWarningTime" : "1 day before",
+        "WarningActions" : [
+            {
+                "HighLight" : {
+                    "Color" : "Red"
+                }
+            }
+        ]
+    },
+    "InternetTrafficRequired" : {
+        "Type" : "Boolean"
+    },
+    "Exception" : {
+        "Type" : "Boolean"
+    },
+    "ExceptionApproved" : {
+        "Type" : "Boolean"
+    },
+    "IPRecord" : {
+        "Type" : "Time"
+    },
+    "ICPRecord1" : {
+        "Type" : "Time"
+    },
+    "ICPRecord2" : {
+        "Type" : "Time"
+    },
+    "ICPRecord3" : {
+        "Type" : "Time"
+    },
+    "Usage" : {
+        "Type" : "Number"
+    },
+    "KnownIssues" : {
+        "Type" : "CheckboxList",
+        "Options" : [
+            "issue A",
+            "issue B",
+            "issue C"
+        ]
+    },
+    "OpenIssues" : {
+        "Type" : "MultiLineString"
+    }
+}

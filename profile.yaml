@@ -1,0 +1,21 @@
+- account id:
+    Type: String
+    Pattern: "[0-9]{12}"
+- e-mail:
+    Type: String
+    Pattern: \w+@\w+
+- customer name:
+    Type: String
+- Usage:
+    Type: Number
+- Issue:
+    Type: Containter
+    Children:
+      - Known issues:
+          Type: CheckboxList
+          Options:
+            - issue A
+            - issue B
+            - issue C
+      - Open issues:
+          Type: MultiLineString

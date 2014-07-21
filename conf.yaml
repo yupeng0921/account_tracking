@@ -1,0 +1,12 @@
+mongodb_addr: 127.0.0.1
+mongodb_port: 27017
+db_name: account_info
+message_collection: message
+message_magic_key: message_magic_key
+daemon_interval: 3
+daemon_stdin_path: /tmp/stdin
+daemon_stdout_path: /tmp/stdout
+daemon_stderr_path: /tmp/stderr
+daemon_pidfile_path: /tmp/pidfile
+daemon_pidfile_timeout: 3
+daemon_log_file: /tmp/account_info_daemon.log

@@ -1,0 +1,18 @@
+[
+    "AccountId",
+    "EMail",
+    "CustomerName",
+    "Segment",
+    "AccountManager",
+    "KicooffMeeting",
+    "InternetTrafficRequired",
+    "Exception",
+    "ExceptionApproved",
+    "IPRecord",
+    "ICPRecord1",
+    "ICPRecord2",
+    "ICPRecord3",
+    "Usage",
+    "KnownIssues",
+    "OpenIssues"
+]
