@@ -17,28 +17,28 @@
   <body>
 	<table class="table table-bordered">
 	  <tr>
+		<td> </td>
 		{% for title in result.titles %}
 		<td> {{title}} </td>
 		{% endfor %}
 	  </tr>
 	  {% for line in result.lines %}
-	  <a href=/edit/{{line.primary_key}}>
-		<tr>
-		  {% for column in line.columns %}
-		  {% if column.color == "red" %}
-		  <td class="danger"> {{column.html_string}} </td>
-		  {% elif column.color == "yellow" %}
-		  <td class="warning"> {{column.html_string}} </td>
-		  {% elif column.color == "blue" %}
-		  <td class="info"> {{column.html_string}} </td>
-		  {% elif column.color == "green" %}
-		  <td class="success"> {{column.html_string}} </td>
-		  {% else %}
-		  <td> {{column.html_string}} </td>
-		  {% endif %}
-		  {% endfor %}
-		</tr>
-	  </a>
+	  <tr>
+		<td> <a href="/edit/{{line.primary_key}}"> link </a> </td>
+		{% for column in line.columns %}
+		{% if column.color == "red" %}
+		<td class="danger"> {{column.html_string}} </td>
+		{% elif column.color == "yellow" %}
+		<td class="warning"> {{column.html_string}} </td>
+		{% elif column.color == "blue" %}
+		<td class="info"> {{column.html_string}} </td>
+		{% elif column.color == "green" %}
+		<td class="success"> {{column.html_string}} </td>
+		{% else %}
+		<td> {{column.html_string}} </td>
+		{% endif %}
+		{% endfor %}
+	  </tr>
 	  {% endfor %}
   </body>
 </html>
