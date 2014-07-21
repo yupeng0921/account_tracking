@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title> search result </title>
+
+	<!-- Bootstrap core CSS -->
+	<link href="/static/dist/css/bootstrap.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+	<table class="table table-bordered">
+	  <tr>
+		{% for title in result.titles %}
+		<td> {{title}} </td>
+		{% endfor %}
+	  </tr>
+	  {% for line in result.lines %}
+	  <tr>
+		{% for column in line %}
+		{% if column.color == "red" %}
+		<td class="danger">
+		  {{column.html_string}}
+		</td>
+		{% elif column.color == "yellow" %}
+		<td class="warning">
+		  {{column.html_string}}
+		</td>
+		{% elif column.color == "blue" %}
+		<td class="info">
+		  {{column.html_string}}
+		</td>
+		{% elif column.color == "green" %}
+		<td class="success">
+		  {{column.html_string}}
+		</td>
+		{% else %}
+		<td>
+		  {{column.html_string}}
+		</td>
+		{% endif %}
+		{% endfor %}
+	  </tr>
+	  {% endfor %}
+  </body>
+</html>

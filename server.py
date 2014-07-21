@@ -3,11 +3,14 @@
 import os
 import time
 import yaml
+import json
 import logging
 from pymongo import MongoClient
 from flask import Flask, request, redirect, url_for, render_template, abort, Response
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user
+
+from account_op import search_op, do_search
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -88,7 +91,27 @@ def upload():
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
-    return 'search'
+    if request.method == 'POST':
+        results = []
+        for item in search_op:
+            name = item['name']
+            result = {}
+            result['name'] = name
+            if item['type'] == 'text':
+                result['option'] = request.form['%s_option' % name]
+                result['text'] = request.form['%s_text' % name]
+            elif item['type'] == 'multichoice':
+                result['choices'] = request.form.getlist('%s_choices' % name)
+            results.append(result)
+        params=json.dumps(results)
+        return redirect(url_for('search_result', params=params))
+    return render_template('search.html', items=search_op)
+
+@app.route('/search/<params>')
+def search_result(params):
+    params = json.loads(params)
+    result = do_search(params)
+    return render_template('search_result.html', result=result)
 
 if __name__ == '__main__':
     app.debug = True
