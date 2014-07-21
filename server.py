@@ -10,7 +10,7 @@ from flask import Flask, request, redirect, url_for, render_template, abort, Res
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user
 
-from account_op import search_op, do_search
+from account_op import search_op, do_search, get_item
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -112,6 +112,12 @@ def search_result(params):
     params = json.loads(params)
     result = do_search(params)
     return render_template('search_result.html', result=result)
+
+@app.route('/edit')
+@app.route('/edit/<primary_key>')
+def edit_item(primary_key):
+    item = get_item(primary_key)
+    return render_template('edit.html', item=item)
 
 if __name__ == '__main__':
     app.debug = True

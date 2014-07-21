@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title> search </title>
+
+	<!-- Bootstrap core CSS -->
+	<link href="/static/dist/css/bootstrap.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+	<form class="form", action="" method="post">
+	  {% for column in item %}
+	  {% if column.type == "text" %}
+	  <div class="row">
+		<div class="col-md-3">
+		  <label> {{column.name}} </label>
+		</div>
+		<div class="col-md-3">
+		  <input type="text" class="form-control" id="{{column.name}}_text" name="{{column.name}}_text" value="{{column.value}}">
+		</div>
+	  </div>
+	  {% elif column.type == "multichoice" %}
+	  <div class="row">
+		<div class="col-md-3">
+		  <label> {{column.name}} </label>
+		</div>
+		<div class="col-md-3">
+		  {% for choice in column.choices %}
+		  <label class="checkbox">
+			<input type="checkbox" id="{{column.name}}_choices" name="{{column.name}}_choices" value="{{choice.name}}" checked="{{choice.checked}}"> {{choice.name}}
+		  </label>
+		  {% endfor %}
+		</div>
+	  </div>
+	  {% else %}
+	  <div class="row">
+		<label> unsupport type, {{item.type}}, {{item.name}} </label>
+	  </div>
+	  {% endif %}
+	  {% endfor %}
+	  <button type="submit" class="btn">Submit</button>
+	</form>
+  </body>
+</html>
