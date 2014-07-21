@@ -65,7 +65,6 @@ def do_job(action, fullpath, collection):
         account_lines.delete_account()
     info = '%s complete' % action
     update_information(collection, info)
-    set_status(collection, 'idle')
 
 class RunTask():
     def __init__(self, stdin_path, stdout_path, stderr_path, pidfile_path, pidfile_timeout):
@@ -107,6 +106,11 @@ class RunTask():
                 do_job(action, fullpath, collection)
             except Exception, e:
                 logging.error('job failed: %s' % unicode(e))
+            try:
+                os.remove(fullpath)
+            except Exception, e:
+                pass
+            set_status(collection, 'idle')
 
 task = RunTask(daemon_stdin_path, daemon_stdout_path, daemon_stderr_path, daemon_pidfile_path, daemon_pidfile_timeout)
 daemon_runner = runner.DaemonRunner(task)

@@ -66,6 +66,26 @@ app = Flask(__name__)
 def index():
     return 'hello world'
 
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+        upload_file = request.files['upload_file']
+        filename = secure_filename(upload_file.filename)
+        timestamp = '%f' % time.time()
+        upload_filename = '%s.%s' % (timestamp, filename)
+        upload_filename = os.path.join(current_file_full_path, upload_folder, upload_filename)
+        upload_file.save(upload_filename)
+        action = request.form['actionsRadios']
+        try:
+            send_message(action, upload_filename)
+        except Exception, e:
+            os.remove(upload_filename)
+            return unicode(e)
+        return redirect(url_for('upload'))
+    (status, info) = get_information()
+    status_and_info = '%s\n%s' % (status, info)
+    return render_template('upload.html', status_and_info=status_and_info)
+
 @app.route('/insert', methods=['GET', 'POST'])
 def insert():
     if request.method == 'POST':
