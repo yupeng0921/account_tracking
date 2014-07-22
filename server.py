@@ -10,7 +10,7 @@ from flask import Flask, request, redirect, url_for, render_template, abort, Res
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user
 
-from account_op import search_op, do_search, get_item
+from account_op import search_op, do_search, get_columns, set_columns
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -21,8 +21,13 @@ mongodb_port = conf['mongodb_port']
 db_name = conf['db_name']
 message_collection = conf['message_collection']
 message_magic_key = conf['message_magic_key']
+server_log_file = conf['server_log_file']
 
 upload_folder = 'upload'
+
+format = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
+datefmt='%Y-%m-%d %H:%M:%S'
+logging.basicConfig(filename=server_log_file, level=logging.DEBUG, format=format, datefmt=datefmt)
 
 def send_message(action, fullpath):
     '''
@@ -117,10 +122,28 @@ def search_result(params):
 @app.route('/edit/<primary_key>', methods=['GEt', 'POST'])
 def edit_item(primary_key):
     if request.method == 'POST':
-        
+        columns = get_columns()
+        for column in columns:
+            name = column['name']
+            if column['type'] == 'text':
+                value = request.form['%s_text' % name]
+                column['value'] = value
+            elif column['type'] == 'multichoice':
+                choices = request.form.getlist('%s_choices' % name)
+                column['choices'] = choices
+            elif column['type'] == 'textarea':
+                print('before get value')
+                value = request.form['%s_textarea' % name]
+                print('after get value')
+                print(value)
+                column['value'] = value
+            else:
+                logging.error('invalid column: %s' % unicode(column))
+                abort(500)
+        set_columns(columns)
         return redirect(url_for('edit_item', primary_key=primary_key))
-    item = get_item(primary_key)
-    return render_template('edit.html', item=item)
+    columns = get_columns(primary_key)
+    return render_template('edit.html', columns=columns)
 
 if __name__ == '__main__':
     app.debug = True

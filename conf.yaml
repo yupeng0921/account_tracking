@@ -9,4 +9,5 @@ daemon_stdout_path: /tmp/stdout
 daemon_stderr_path: /tmp/stderr
 daemon_pidfile_path: /tmp/pidfile
 daemon_pidfile_timeout: 3
-daemon_log_file: /tmp/account_info_daemon.log
+daemon_log_file: /tmp/account_tracking_daemon.log
+server_log_file: /tmp/account_tracking_server.log

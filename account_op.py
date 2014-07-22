@@ -77,38 +77,44 @@ def do_search(params):
     result['lines'] = lines
     return result
 
-def get_item(primary_key):
-    item = []
+def get_columns(primary_key=None):
+    if not primary_key:
+        return get_columns_skeleton()
+    else:
+        return get_columns_by_key(primary_key)
+
+def get_columns_by_key(primary_key):
+    columns = []
     column = {}
     column['name'] = 'AccountId'
     column['type'] = 'text'
     column['value'] = '1234'
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'EMail'
     column['type'] = 'text'
     column['value'] = 'cindy@abc.com'
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'CustomerName'
     column['type'] = 'text'
     column['value'] = 'abc company'
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'Segment'
     column['type'] = 'text'
     column['value'] = 'segment fault'
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'AccountManager'
     column['type'] = 'text'
     column['value'] = 'dany'
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'KickoffMeeting'
     column['type'] = 'text'
     column['value'] = '2014/03/19'
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'InternettraficRequired'
     column['type'] = 'multichoice'
@@ -116,7 +122,7 @@ def get_item(primary_key):
     choice = {'name': 'require', 'checked': 'true'}
     choices.append(choice)
     column['choices'] = choices
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'Exception'
     column['type'] = 'multichoice'
@@ -124,32 +130,32 @@ def get_item(primary_key):
     choice = {'name': 'require', 'checked': 'true'}
     choices.append(choice)
     column['choices'] = choices
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'IPRecord'
     column['type'] = 'text'
     column['value'] = '2014/04/20'
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'ICPRecord1'
     column['type'] = 'text'
     column['value'] = ''
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'ICPRecord2'
     column['type'] = 'text'
     column['value'] = ''
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'ICPRecord3'
     column['type'] = 'text'
     column['value'] = ''
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'Usage'
     column['type'] = 'text'
     column['value'] = ''
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'KnownIssues'
     column['type'] = 'multichoice'
@@ -161,10 +167,77 @@ def get_item(primary_key):
     choice = {'name': 'Issue C', 'checked': 'true'}
     choices.append(choice)
     column['choices'] = choices
-    item.append(column)
+    columns.append(column)
     column = {}
     column['name'] = 'OpenIssues'
     column['type'] = 'textarea'
     column['value'] = 'abc\ndef\nmn'
-    item.append(column)
-    return item
+    columns.append(column)
+    return columns
+
+def get_columns_skeleton():
+    columns = []
+    column = {}
+    column['name'] = 'AccountId'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'EMail'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'CustomerName'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'Segment'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'AccountManager'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'KickoffMeeting'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'InternettraficRequired'
+    column['type'] = 'multichoice'
+    columns.append(column)
+    column = {}
+    column['name'] = 'Exception'
+    column['type'] = 'multichoice'
+    columns.append(column)
+    column = {}
+    column['name'] = 'IPRecord'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'ICPRecord1'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'ICPRecord2'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'ICPRecord3'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'Usage'
+    column['type'] = 'text'
+    columns.append(column)
+    column = {}
+    column['name'] = 'KnownIssues'
+    column['type'] = 'multichoice'
+    columns.append(column)
+    column = {}
+    column['name'] = 'OpenIssues'
+    column['type'] = 'textarea'
+    columns.append(column)
+    return columns
+
+def set_columns(columns):
+    print(columns)

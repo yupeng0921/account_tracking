@@ -4,7 +4,7 @@
 
 {% block content %}
 <form class="form", action="" method="post">
-  {% for column in item %}
+  {% for column in columns %}
   {% if column.type == "text" %}
   <div class="row">
 	<div class="col-md-3">
@@ -37,12 +37,12 @@
 	  <label> {{column.name}} </label>
 	</div>
 	<div class="col-md-3">
-	  <textarea class="form-control">{{column.value}}</textarea>
+	  <textarea class="form-control" id="{{column.name}}_textarea" name="{{column.name}}_textarea">{{column.value}}</textarea>
 	</div>
   </div>
   {% else %}
   <div class="row">
-	<label> unsupport type, {{item.type}}, {{item.name}} </label>
+	<label> unsupport type, {{columns.type}}, {{columns.name}} </label>
   </div>
   {% endif %}
   {% endfor %}
