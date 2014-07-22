@@ -1,58 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="description" content="">
-	<meta name="author" content="">
-
-	<title> search </title>
-
-	<!-- Bootstrap core CSS -->
-	<link href="/static/dist/css/bootstrap.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-	<form class="form", action="" method="post">
-	  {% for item in items %}
-	  {% if item.type == "text" %}
-	  <div class="row">
-		<div class="col-md-3">
-		  <label> {{item.name}} </label>
-		</div>
-		<div class="col-md-3">
-		  <select class="form-control", id="{{item.name}}_option", name="{{item.name}}_option">
-			{% for option in item.options %}
-			<option>{{option}}</option>
-			{% endfor %}
-		  </select>
-		</div>
-		<div class="col-md-3">
-		  <input type="text" class="form-control" id="{{item.name}}_text" name="{{item.name}}_text">
-		</div>
-	  </div>
-	  {% elif item.type == "multichoice" %}
-	  <div class="row">
-		<div class="col-md-3">
-		  <label> {{item.name}} </label>
-		</div>
-		<div class="col-md-3">
-		  {% for choice in item.choices %}
-		  <label class="checkbox">
-			<input type="checkbox" id="{{item.name}}_choices" name="{{item.name}}_choices" value="{{choice}}"> {{choice}}
-		  </label>
-		  {% endfor %}
-		</div>
-	  </div>
-	  {% else %}
-	  <div class="row">
-		<label> unsupport type, {{item.type}}, {{item.name}} </label>
-	  </div>
-	  {% endif %}
+{% extends "base.html" %}
+{% block title %}search{% endblock %}
+{% block content %}
+<form class="form", action="" method="post">
+  {% for item in items %}
+  {% if item.type == "text" %}
+  <div class="row">
+	<div class="col-md-3">
+	  <label> {{item.name}} </label>
+	</div>
+	<div class="col-md-3">
+	  <select class="form-control", id="{{item.name}}_option", name="{{item.name}}_option">
+		{% for option in item.options %}
+		<option>{{option}}</option>
+		{% endfor %}
+	  </select>
+	</div>
+	<div class="col-md-3">
+	  <input type="text" class="form-control" id="{{item.name}}_text" name="{{item.name}}_text">
+	</div>
+  </div>
+  {% elif item.type == "multichoice" %}
+  <div class="row">
+	<div class="col-md-3">
+	  <label> {{item.name}} </label>
+	</div>
+	<div class="col-md-3">
+	  {% for choice in item.choices %}
+	  <label class="checkbox">
+		<input type="checkbox" id="{{item.name}}_choices" name="{{item.name}}_choices" value="{{choice}}"> {{choice}}
+	  </label>
 	  {% endfor %}
-	  <button type="submit" class="btn">Search</button>
-	</form>
-  </body>
-</html>
+	</div>
+  </div>
+  {% else %}
+  <div class="row">
+	<label> unsupport type, {{item.type}}, {{item.name}} </label>
+  </div>
+  {% endif %}
+  {% endfor %}
+  <button type="submit" class="btn">Search</button>
+</form>
+{% endblock %}
