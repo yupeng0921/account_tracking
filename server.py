@@ -114,8 +114,11 @@ def search_result(params):
     return render_template('search_result.html', result=result)
 
 @app.route('/edit')
-@app.route('/edit/<primary_key>')
+@app.route('/edit/<primary_key>', methods=['GEt', 'POST'])
 def edit_item(primary_key):
+    if request.method == 'POST':
+        
+        return redirect(url_for('edit_item', primary_key=primary_key))
     item = get_item(primary_key)
     return render_template('edit.html', item=item)
 

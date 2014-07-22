@@ -27,15 +27,15 @@
 		<td> <a href="/edit/{{line.primary_key}}"> link </a> </td>
 		{% for column in line.columns %}
 		{% if column.color == "red" %}
-		<td class="danger"> {{column.html_string}} </td>
+		<td class="danger"> {{column.html_string|safe}} </td>
 		{% elif column.color == "yellow" %}
-		<td class="warning"> {{column.html_string}} </td>
+		<td class="warning"> {{column.html_string|safe}} </td>
 		{% elif column.color == "blue" %}
-		<td class="info"> {{column.html_string}} </td>
+		<td class="info"> {{column.html_string|safe}} </td>
 		{% elif column.color == "green" %}
-		<td class="success"> {{column.html_string}} </td>
+		<td class="success"> {{column.html_string|safe}} </td>
 		{% else %}
-		<td> {{column.html_string}} </td>
+		<td> {{column.html_string|safe}} </td>
 		{% endif %}
 		{% endfor %}
 	  </tr>

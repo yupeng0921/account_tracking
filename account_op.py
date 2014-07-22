@@ -60,7 +60,17 @@ def do_search(params):
         {'html_string':'cindy@def.com'},
         {'html_string': 'cindy'},
         {'html_string': '', },
-        {'html_string': 'dany'}
+        {'html_string': 'dany'},
+        {'html_string': '2014/09/11'},
+        {'html_string': 'yes'},
+        {'html_string': 'no'},
+        {'html_string': '2014/10/20'},
+        {'html_string': ''},
+        {'html_string': ''},
+        {'html_string': '2014/10/23'},
+        {'html_string': '20'},
+        {'html_string': '<p>Issue A</p><p>Issue B</p>'},
+        {'html_string': '<p>abc</p><p>def</p><p>gh</p>'}
         ]
     line = {'primary_key': 'cindy@def.com', 'columns': columns}
     lines.append(line)
