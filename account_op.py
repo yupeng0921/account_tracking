@@ -1,79 +1,118 @@
 #! /usr/bin/env python
 
-class AccountLines():
-    def __init__(self, titles):
-        pass
-    def add_line(self, columns):
-        pass
-    def create_account(self):
-        pass
-    def update_account(self):
-        pass
-    def delete_account(self):
-        pass
+import yaml
+import logging
+import os
+from pymongo import MongoClient
+from column_op import g_class_dict, g_all_classes, g_searchable_classes, g_primary_column_name
 
-search_op = [
-    { 'name': 'AccountId',
-      'type': 'text',
-      'options': ['equal', 'contain', 'equal ignore case', 'contain ignore case'] },
-    { 'name': 'Email',
-      'type': 'text',
-      'options': ['equal', 'contain', 'equal ignore case', 'contain ignore case'] },
-    { 'name': 'CustomerName',
-      'type': 'text',
-      'options': ['equal', 'contain', 'equal ignore case', 'contain ignore case'] },
-    { 'name': 'Segment',
-      'type': 'text',
-      'options': ['equal', 'contain', 'equal ignore case', 'contain ignore case'] },
-    { 'name': 'AccountManager',
-      'type': 'text',
-      'options': ['equal', 'contain', 'equal ignore case', 'contain ignore case'] },
-    { 'name': 'KnownIssues',
-      'type': 'multichoice',
-      'choices': ['issue A', 'issue B', 'issue C']
-      },
-    { 'name': 'OpenIssues',
-      'type': 'text',
-      'options': ['equal', 'contain', 'equal ignore case', 'contain ignore case'] }
-    ]
+current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
+with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
+    conf = yaml.safe_load(f)
+
+mongodb_addr = conf['mongodb_addr']
+mongodb_port = conf['mongodb_port']
+db_name = conf['db_name']
+account_collection = conf['account_collection']
+
+client = MongoClient(mongodb_addr, mongodb_port)
+db = client[db_name]
+g_collection = db[account_collection]
+
+class AccountLines():
+    class_dict = g_class_dict
+    primary_column_name = g_primary_column_name
+    collection = g_collection
+    def __init__(self, titles):
+        for title in titles:
+            if title not in self.class_dict:
+                raise Exception('invalid column name: %s' % title)
+        if self.primary_column_name not in titles:
+            raise Exception('no primary column: %s' % self.primary_column_name)
+        self.titles = titles
+        self.lines = []
+    def add_line(self, values):
+        column_objs = []
+        for title in self.titles:
+            value = values.pop(0)
+            column_class = self.class_dict[title]
+            column_obj = column_class(value)
+            column_objs.append(column_obj)
+        self.lines.append(column_objs)
+    def _insert(self, keypairs):
+        logging.debug('insert: %s' % keypairs)
+        self.collection.insert(keypairs)
+    def create_account(self):
+        for column_objs in self.lines:
+            keypairs = {}
+            for column_obj in column_objs:
+                value = column_obj.get_value()
+                name = column_obj.get_name()
+                if name == g_primary_column_name:
+                    name = '_id'
+                keypairs.update({name: value})
+            self._insert(keypairs)
+    def _update(self, primary, keypairs):
+        logging.debug('update: %s %s' % (primary, keypairs))
+        self.collection.update(primary, {'$set': keypairs})
+    def update_account(self):
+        for column_objs in self.lines:
+            keypairs = {}
+            primary = None
+            for column_obj in column_objs:
+                name = column_obj.get_name()
+                value = column_obj.get_value()
+                if name == g_primary_column_name:
+                    primary = {'_id': value}
+                else:
+                    keypairs.update({name: value})
+            assert primary
+            self._update(primary, keykpairs)
+    def _delete(self, primary):
+        logging.debug('delete: %s' % primary)
+        self.collection.remove(primary)
+    def delete_account(self):
+        primary = None
+        for column_obj in column_objs:
+            name = column_obj.get_name()
+            if name == g_primary_column_name:
+                value = column_objs.get_value()
+                primary = {'_id': value}
+                break
+        assert primary
+        self._delete(primary)
+
+search_op = []
+for class_name in g_searchable_classes:
+    class_type = g_class_dict[class_name]
+    op = class_type.get_search_op()
+    search_op.append(op)
 
 def do_search(params):
     result = {}
-    result['titles'] = [
-        'AccountId', 'EMail', 'CustomerName', 'Segment', 
-        'AccountManager', 'KicooffMeeting', 'InternetTrafficRequired',
-        'ExceptionApproved', 'IPRecord', 'ICPRecord1', 'ICPRecord2', 'ICPRecord3',
-        'Usage', 'KnownIssues', 'OpenIssues'
-        ]
+    result['titles'] = g_searchable_classes
+    keypairs = {}
+    for param in params:
+        name = param['name']
+        class_type = g_class_dict[name]
+        value = class_type.get_search_value(param)
+        if name == g_primary_column_name:
+            name = '_id'
+        if value:
+            keypairs.update({name: value})
+    items = g_collection.find(keypairs)
     lines = []
-    columns = [
-        {'html_string': '111'},
-        {'html_string':'alice@abc.com'},
-        {'html_string': 'alice'},
-        {'html_string': '', },
-        {'html_string': 'bob'}
-        ]
-    line = {'primary_key': 'alice@abc.com', 'columns': columns}
-    lines.append(line)
-    columns = [
-        {'html_string': '222'},
-        {'html_string':'cindy@def.com'},
-        {'html_string': 'cindy'},
-        {'html_string': '', },
-        {'html_string': 'dany'},
-        {'html_string': '2014/09/11'},
-        {'html_string': 'yes'},
-        {'html_string': 'no'},
-        {'html_string': '2014/10/20'},
-        {'html_string': ''},
-        {'html_string': ''},
-        {'html_string': '2014/10/23'},
-        {'html_string': '20'},
-        {'html_string': '<p>Issue A</p><p>Issue B</p>'},
-        {'html_string': '<p>abc</p><p>def</p><p>gh</p>'}
-        ]
-    line = {'primary_key': 'cindy@def.com', 'columns': columns}
-    lines.append(line)
+    for item in items:
+        columns = []
+        primary_key = item['_id']
+        for name in g_searchable_classes:
+            class_type = g_class_dict[name]
+            if name == g_primary_column_name:
+                name = '_id'
+            html_string = class_type.get_html_string(item[name])
+            columns.append({'html_string': html_string})
+        line = {'primary_key': primary_key, 'columns': columns}
+        lines.append(line)
     result['lines'] = lines
     return result
 
@@ -85,159 +124,35 @@ def get_columns(primary_key=None):
 
 def get_columns_by_key(primary_key):
     columns = []
-    column = {}
-    column['name'] = 'AccountId'
-    column['type'] = 'text'
-    column['value'] = '1234'
-    columns.append(column)
-    column = {}
-    column['name'] = 'EMail'
-    column['type'] = 'text'
-    column['value'] = 'cindy@abc.com'
-    columns.append(column)
-    column = {}
-    column['name'] = 'CustomerName'
-    column['type'] = 'text'
-    column['value'] = 'abc company'
-    columns.append(column)
-    column = {}
-    column['name'] = 'Segment'
-    column['type'] = 'text'
-    column['value'] = 'segment fault'
-    columns.append(column)
-    column = {}
-    column['name'] = 'AccountManager'
-    column['type'] = 'text'
-    column['value'] = 'dany'
-    columns.append(column)
-    column = {}
-    column['name'] = 'KickoffMeeting'
-    column['type'] = 'text'
-    column['value'] = '2014/03/19'
-    columns.append(column)
-    column = {}
-    column['name'] = 'InternettraficRequired'
-    column['type'] = 'multichoice'
-    choices = []
-    choice = {'name': 'require', 'checked': 'true'}
-    choices.append(choice)
-    column['choices'] = choices
-    columns.append(column)
-    column = {}
-    column['name'] = 'Exception'
-    column['type'] = 'multichoice'
-    choices = []
-    choice = {'name': 'require', 'checked': 'true'}
-    choices.append(choice)
-    column['choices'] = choices
-    columns.append(column)
-    column = {}
-    column['name'] = 'IPRecord'
-    column['type'] = 'text'
-    column['value'] = '2014/04/20'
-    columns.append(column)
-    column = {}
-    column['name'] = 'ICPRecord1'
-    column['type'] = 'text'
-    column['value'] = ''
-    columns.append(column)
-    column = {}
-    column['name'] = 'ICPRecord2'
-    column['type'] = 'text'
-    column['value'] = ''
-    columns.append(column)
-    column = {}
-    column['name'] = 'ICPRecord3'
-    column['type'] = 'text'
-    column['value'] = ''
-    columns.append(column)
-    column = {}
-    column['name'] = 'Usage'
-    column['type'] = 'text'
-    column['value'] = ''
-    columns.append(column)
-    column = {}
-    column['name'] = 'KnownIssues'
-    column['type'] = 'multichoice'
-    choices = []
-    choice = {'name': 'Issue A', 'checked': 'true'}
-    choices.append(choice)
-    choice = {'name': 'Issue B', 'checked': ''}
-    choices.append(choice)
-    choice = {'name': 'Issue C', 'checked': 'true'}
-    choices.append(choice)
-    column['choices'] = choices
-    columns.append(column)
-    column = {}
-    column['name'] = 'OpenIssues'
-    column['type'] = 'textarea'
-    column['value'] = 'abc\ndef\nmn'
-    columns.append(column)
+    item = g_collection.find_one({'_id': primary_key})
+    for name in g_all_classes:
+        class_type = g_class_dict[name]
+        if name == g_primary_column_name:
+            value = item['_id']
+        else:
+            value = item[name]
+        column = class_type.get_column_by_value(value)
+        columns.append(column)
     return columns
 
 def get_columns_skeleton():
     columns = []
-    column = {}
-    column['name'] = 'AccountId'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'EMail'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'CustomerName'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'Segment'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'AccountManager'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'KickoffMeeting'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'InternettraficRequired'
-    column['type'] = 'multichoice'
-    columns.append(column)
-    column = {}
-    column['name'] = 'Exception'
-    column['type'] = 'multichoice'
-    columns.append(column)
-    column = {}
-    column['name'] = 'IPRecord'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'ICPRecord1'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'ICPRecord2'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'ICPRecord3'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'Usage'
-    column['type'] = 'text'
-    columns.append(column)
-    column = {}
-    column['name'] = 'KnownIssues'
-    column['type'] = 'multichoice'
-    columns.append(column)
-    column = {}
-    column['name'] = 'OpenIssues'
-    column['type'] = 'textarea'
-    columns.append(column)
+    for name in g_all_classes:
+        class_type = g_class_dict[name]
+        column = class_type.get_column_skeleton()
+        columns.append(column)
     return columns
 
 def set_columns(columns):
-    print(columns)
+    keypairs = {}
+    condition = None
+    for column in columns:
+        name = column['name']
+        class_type = g_class_dict[name]
+        value = class_type.get_value_by_column(column)
+        if name == g_primary_column_name:
+            condition = {'_id': value}
+        else:
+            keypairs.update({name:value})
+    assert condition
+    g_collection.update(condition, {'$set': keypairs})

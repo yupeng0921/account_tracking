@@ -11,3 +11,4 @@ daemon_pidfile_path: /tmp/pidfile
 daemon_pidfile_timeout: 3
 daemon_log_file: /tmp/account_tracking_daemon.log
 server_log_file: /tmp/account_tracking_server.log
+account_collection: account

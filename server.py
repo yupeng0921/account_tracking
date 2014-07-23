@@ -60,7 +60,6 @@ def get_information():
     collection = db[message_collection]
     condition = {'_id': message_magic_key}
     ret = collection.find_one(condition, {'status':1,'info':1})
-    print(ret)
     status = ret['status']
     if 'info' in ret:
         info = ret['info']
@@ -97,18 +96,18 @@ def upload():
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
-        results = []
+        params = []
         for item in search_op:
             name = item['name']
-            result = {}
-            result['name'] = name
+            param = {}
+            param['name'] = name
             if item['type'] == 'text':
-                result['option'] = request.form['%s_option' % name]
-                result['text'] = request.form['%s_text' % name]
+                param['option'] = request.form['%s_option' % name]
+                param['text'] = request.form['%s_text' % name]
             elif item['type'] == 'multichoice':
-                result['choices'] = request.form.getlist('%s_choices' % name)
-            results.append(result)
-        params=json.dumps(results)
+                param['choices'] = request.form.getlist('%s_choices' % name)
+            params.append(param)
+        params=json.dumps(params)
         return redirect(url_for('search_result', params=params))
     return render_template('search.html', items=search_op)
 
@@ -132,10 +131,7 @@ def edit_item(primary_key):
                 choices = request.form.getlist('%s_choices' % name)
                 column['choices'] = choices
             elif column['type'] == 'textarea':
-                print('before get value')
                 value = request.form['%s_textarea' % name]
-                print('after get value')
-                print(value)
                 column['value'] = value
             else:
                 logging.error('invalid column: %s' % unicode(column))

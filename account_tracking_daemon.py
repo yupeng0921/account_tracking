@@ -41,29 +41,41 @@ def do_job(action, fullpath, collection):
     f = open(fullpath, 'r')
     titles = f.next().split(',')
     titles = [title.strip() for title in titles]
-    account_lines = AccountLines(titles)
+    try:
+        account_lines = AccountLines(titles)
+    except Exception, e:
+        info = '%s failed\n%s' % (action, unicode(e))
+        update_information(collection, info)
+        return
     varify_errors = []
     line_number = 1
     for eachline in f:
         line_number += 1
-        columns = eachline.split(',')
-        columns = [column.strip() for column in columns]
+        values = eachline.split(',')
+        values = [value.strip() for value in values]
         try:
-            account_lines.add_line(columns)
+            account_lines.add_line(values)
         except Exception, e:
+            logging.error(unicode(e))
             varify_errors.append(line_number)
     info = 'verified: %d failed: %s' % (line_number, unicode(varify_errors))
     update_information(collection, info)
     if varify_errors:
-        set_status(collection, 'idle')
         return
-    if action == 'create':
-        account_lines.create_account()
-    elif action == 'update':
-        account_lines.update_account()
-    elif action == 'delete':
-        account_lines.delete_account()
-    info = '%s complete' % action
+    action_error = None
+    try:
+        if action == 'create':
+            account_lines.create_account()
+        elif action == 'update':
+            account_lines.update_account()
+        elif action == 'delete':
+            account_lines.delete_account()
+    except Exception, e:
+        action_error = unicode(e)
+    if action_error:
+        info = '%s failed\n%s' % (action, action_error)
+    else:
+        info = '%s success' % action
     update_information(collection, info)
 
 class RunTask():

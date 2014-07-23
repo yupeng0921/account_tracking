@@ -15,7 +15,7 @@
         "Type" : "String"
     },
     "AccountManager" : {
-        "Type" : "List"
+        "Type" : "String"
     },
     "KickoffMeeting" : {
         "Type" : "TimeEvent",
@@ -40,13 +40,7 @@
     "IPRecord" : {
         "Type" : "Time"
     },
-    "ICPRecord1" : {
-        "Type" : "Time"
-    },
-    "ICPRecord2" : {
-        "Type" : "Time"
-    },
-    "ICPRecord3" : {
+    "ICPRecord" : {
         "Type" : "Time"
     },
     "Usage" : {
