@@ -194,7 +194,11 @@ class MultiLineStringColumn(BasicColumn):
         return inp['text'].strip()
     @classmethod
     def get_html_string(cls, inp):
-        return inp
+        lines = inp.split('\n')
+        html = ''
+        for line in lines:
+            html = '%s<p>%s</p>' % (html, line)
+        return html
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
