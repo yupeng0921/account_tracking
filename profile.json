@@ -16,45 +16,5 @@
     },
     "AccountManager" : {
         "Type" : "String"
-    },
-    "KickoffMeeting" : {
-        "Type" : "TimeEvent",
-        "DefaultWarningTime" : "1 day before",
-        "WarningActions" : [
-            {
-                "HighLight" : {
-                    "Color" : "Red"
-                }
-            }
-        ]
-    },
-    "InternetTrafficRequired" : {
-        "Type" : "Boolean"
-    },
-    "Exception" : {
-        "Type" : "Boolean"
-    },
-    "ExceptionApproved" : {
-        "Type" : "Boolean"
-    },
-    "IPRecord" : {
-        "Type" : "Time"
-    },
-    "ICPRecord" : {
-        "Type" : "Time"
-    },
-    "Usage" : {
-        "Type" : "Number"
-    },
-    "KnownIssues" : {
-        "Type" : "CheckboxList",
-        "Options" : [
-            "issue A",
-            "issue B",
-            "issue C"
-        ]
-    },
-    "OpenIssues" : {
-        "Type" : "MultiLineString"
     }
 }

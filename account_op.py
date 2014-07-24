@@ -109,7 +109,10 @@ def do_search(params):
             class_type = g_class_dict[name]
             if name == g_primary_column_name:
                 name = '_id'
-            html_string = class_type.get_html_string(item[name])
+            if name in item:
+                html_string = class_type.get_html_string(item[name])
+            else:
+                html_string = ''
             columns.append({'html_string': html_string})
         line = {'primary_key': primary_key, 'columns': columns}
         lines.append(line)
@@ -129,8 +132,10 @@ def get_columns_by_key(primary_key):
         class_type = g_class_dict[name]
         if name == g_primary_column_name:
             value = item['_id']
-        else:
+        elif name in item:
             value = item[name]
+        else:
+            value = ''
         column = class_type.get_column_by_value(value)
         columns.append(column)
     return columns
