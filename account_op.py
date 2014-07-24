@@ -73,14 +73,15 @@ class AccountLines():
         self.collection.remove(primary)
     def delete_account(self):
         primary = None
-        for column_obj in column_objs:
-            name = column_obj.get_name()
-            if name == g_primary_column_name:
-                value = column_objs.get_value()
-                primary = {'_id': value}
-                break
-        assert primary
-        self._delete(primary)
+        for column_objs in self.lines:
+            for column_obj in column_objs:
+                name = column_obj.get_name()
+                if name == g_primary_column_name:
+                    value = column_obj.get_value()
+                    primary = {'_id': value}
+                    break
+            assert primary
+            self._delete(primary)
 
 search_op = []
 for class_name in g_searchable_classes:
