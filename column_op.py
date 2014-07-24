@@ -66,7 +66,7 @@ class StringColumn(BasicColumn):
         return value
     @classmethod
     def get_name(cls):
-        return cls.name
+        return cls.__name__
     @classmethod
     def _varify_value(cls, value):
         for param, method in cls.varify_methods:
@@ -74,7 +74,107 @@ class StringColumn(BasicColumn):
             if not ret:
                 raise Exception('invalid value: %s %s %s' % \
                                     (value, param, method))
-    def __init__(selv, value):
+    def __init__(self, value):
+        self._varify_value(value)
+        self.value = value
+    def get_value(self):
+        return self.value
+
+class BooleanColumn(BasicColumn):
+    export_type = 'text'
+    true_values = ('True', 'Yes', 'yes', 'Y', 'y')
+    false_values = ('False', 'No', 'no', 'N', 'n')
+    true_in_db = 'True'
+    false_in_db = 'False'
+    @classmethod
+    def get_search_op(cls):
+        op = {}
+        op['name'] = cls.__name__
+        op['type'] = cls.export_type
+        op['options'] = ['equal']
+        return op
+    @classmethod
+    def get_search_value(cls, inp):
+        value = inp['text'].strip()
+        value = cls._get_value_from_input(value)
+        return value
+    @classmethod
+    def get_html_string(cls, inp):
+        return inp
+    @classmethod
+    def get_column_by_value(cls, value):
+        column = cls.get_column_skeleton()
+        column['value'] = value
+        return column
+    @classmethod
+    def get_column_skeleton(cls):
+        column = {}
+        column['name'] = cls.__name__
+        column['type'] = cls.export_type
+        return column
+    @classmethod
+    def get_value_by_column(cls, column):
+        value = column['value'].strip()
+        value = cls._get_value_from_input(value)
+        return value
+    @classmethod
+    def get_name(cls):
+        return cls.name
+    @classmethod
+    def _get_value_from_input(cls, value):
+        if not value:
+            return value
+        elif value in cls.true_values:
+            return cls.true_in_db
+        elif value in cls.false_values:
+            return cls.false_in_db
+        else:
+            raise Exception('invalid value for %s: %s' % \
+                                (cls.__name__, value))
+    def __init__(self, value):
+        self.get_value_by_column(value)
+        self.value = value
+    def get_value(self):
+        return self.value
+
+class TimeColumn(BasicColumn):
+    export_type = 'text'
+    @classmethod
+    def get_search_op(cls):
+        op = {}
+        op['name'] = cls.__name__
+        op['type'] = cls.export_type
+        op['options'] = ['equal']
+        return op
+    @classmethod
+    def get_search_value(cls, inp):
+        return inp['text'].strip()
+    @classmethod
+    def get_html_string(cls, inp):
+        return inp
+    @classmethod
+    def get_column_by_value(cls, value):
+        column = cls.get_column_skeleton()
+        column['value'] = value
+        return column
+    @classmethod
+    def get_column_skeleton(cls):
+        column = {}
+        column['name'] = cls.__name__
+        column['type'] = cls.export_type
+        return column
+    @classmethod
+    def get_value_by_column(cls, column):
+        value = column['value'].strip()
+        cls._varify_value(value)
+        return value
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
+    @classmethod
+    def _varify_value(cls, value):
+        pass
+    def __init__(self, value):
         self._varify_value(value)
         self.value = value
     def get_value(self):
@@ -100,9 +200,15 @@ def get_string_class(name, p):
     cls = classobj(str(name), (StringColumn,), {'varify_methods': varify_methods})
     return cls
 
+def get_boolean_class(name, p):
+    cls = classobj(str(name), (BooleanColumn,),{})
+    return cls
+
+def get_time_class(name, p):
+    cls = classobj(str(name), (TimeColumn,),{})
+    return cls
+
 g_class_dict = {}
-g_all_classes = []
-g_searchable_classes = []
 g_primary_column_name = None
 
 with open('profile.json') as f:
@@ -113,6 +219,10 @@ for name in profile:
     t = p['Type']
     if t == 'String':
         cls = get_string_class(name, p)
+    elif t == 'Time':
+        cls = get_time_class(name, p)
+    elif t == 'Boolean':
+        cls = get_boolean_class(name, p)
     else:
         raise Exception('unsupport type: %s %s' % (name, t))
     g_class_dict[name] = cls
@@ -125,4 +235,5 @@ assert g_primary_column_name
 with open('sequence.json') as f:
     g_all_classes = json.load(f)
 
-g_searchable_classes = g_all_classes
+with open('searchable.json') as f:
+    g_searchable_classes = json.load(f)

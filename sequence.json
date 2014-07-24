@@ -3,5 +3,11 @@
     "EMail",
     "CustomerName",
     "Segment",
-    "AccountManager"
+    "AccountManager",
+    "KickoffMeeting",
+    "InternetTrafficRequired",
+    "Exception",
+    "ExceptionApproved",
+    "IPRecord",
+    "ICPRecord"
 ]

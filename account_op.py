@@ -90,7 +90,7 @@ for class_name in g_searchable_classes:
 
 def do_search(params):
     result = {}
-    result['titles'] = g_searchable_classes
+    result['titles'] = g_all_classes
     keypairs = {}
     for param in params:
         name = param['name']
@@ -105,7 +105,7 @@ def do_search(params):
     for item in items:
         columns = []
         primary_key = item['_id']
-        for name in g_searchable_classes:
+        for name in g_all_classes:
             class_type = g_class_dict[name]
             if name == g_primary_column_name:
                 name = '_id'

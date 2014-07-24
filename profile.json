@@ -16,5 +16,31 @@
     },
     "AccountManager" : {
         "Type" : "String"
+    },
+    "KickoffMeeting" : {
+        "Type" : "Time",
+        "DefaultWarningTime" : "1 day before",
+        "WarningActions" : [
+            {
+                "HighLight" : {
+                    "Color" : "Red"
+                }
+            }
+        ]
+    },
+    "InternetTrafficRequired" : {
+        "Type" : "Boolean"
+    },
+    "Exception" : {
+        "Type" : "Boolean"
+    },
+    "ExceptionApproved" : {
+        "Type" : "Boolean"
+    },
+    "IPRecord" : {
+        "Type" : "Time"
+    },
+    "ICPRecord" : {
+        "Type" : "Time"
     }
 }
