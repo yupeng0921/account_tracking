@@ -3,6 +3,7 @@
 import yaml
 import logging
 import os
+import time
 from pymongo import MongoClient
 from column_op import g_class_dict, g_all_classes, g_searchable_classes, g_primary_column_name
 
@@ -14,6 +15,9 @@ mongodb_addr = conf['mongodb_addr']
 mongodb_port = conf['mongodb_port']
 db_name = conf['db_name']
 account_collection = conf['account_collection']
+default_csv_string = conf['default_csv_string']
+default_csv_delimiter = conf['default_csv_delimiter']
+default_csv_prefix = conf['default_csv_prefix']
 
 client = MongoClient(mongodb_addr, mongodb_port)
 db = client[db_name]
@@ -111,7 +115,8 @@ def do_search(params):
             if name == g_primary_column_name:
                 name = '_id'
             if name in item:
-                html_string = class_type.get_html_string(item[name])
+                html_string = class_type.get_html_string(\
+                    item[name])
             else:
                 html_string = ''
             columns.append({'html_string': html_string})
@@ -120,6 +125,39 @@ def do_search(params):
     result['lines'] = lines
     return result
 
+def do_search_and_run_script(params, script_name):
+    keypairs = {}
+    for param in params:
+        name = param['name']
+        class_type = g_class_dict[name]
+        value = class_type.get_search_value(param)
+        if name == g_primary_column_name:
+            name = '_id'
+        if value:
+            keypairs.update({name: value})
+    items = g_collection.find(keypairs)
+    timestamp = '%f' % time.time()
+    filename = '%s%s' % (default_csv_prefix, timestamp)
+    # f = open(filename, 'w')
+    # for item in items:
+    #     primary_key = item['_id']
+    #     csv_columns = []
+    #     for name in g_all_classes:
+    #         class_type = g_class_dict[name]
+    #         if name == g_primary_column_name:
+    #             name = '_id'
+    #         if name in item:
+    #             csv_string = class_type.get_csv_string(\
+    #                 item[name])
+    #         else:
+    #             csv_string = default_csv_string
+    #         csv_columns.append(csv_string)
+    #         line = default_csv_delimiter.join(csv_columns)
+    #         line = '%s\n' % line
+    #     f.write(line)
+    # f.close()
+    return None
+                
 def get_columns(primary_key=None):
     if not primary_key:
         return get_columns_skeleton()
@@ -162,3 +200,8 @@ def set_columns(columns):
             keypairs.update({name:value})
     assert condition
     g_collection.update(condition, {'$set': keypairs})
+
+def get_scripts():
+    scripts = []
+    scripts.append('default statistics')
+    return scripts

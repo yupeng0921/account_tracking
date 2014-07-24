@@ -38,6 +38,20 @@
   </div>
   {% endif %}
   {% endfor %}
+  <div class="radio">
+	<label>
+	  <input type="radio" name="script_radio" id="no_script" value="no_script" checked>
+	  no script
+	</label>
+  </div>
+  {% for script in scripts %}
+  <div class="radio">
+	<label>
+	  <input type="radio" name="script_radio" id="{{script}}" value="{{script}}">
+	  using {{script}}
+	</label>
+  </div>
+  {% endfor %}
   <button type="submit" class="btn">Search</button>
 </form>
 {% endblock %}

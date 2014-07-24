@@ -10,7 +10,7 @@ from flask import Flask, request, redirect, url_for, render_template, abort, Res
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user
 
-from account_op import search_op, do_search, get_columns, set_columns
+from account_op import search_op, do_search, get_columns, set_columns, get_scripts, do_search_and_run_script
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -108,8 +108,13 @@ def search():
                 param['choices'] = request.form.getlist('%s_choices' % name)
             params.append(param)
         params=json.dumps(params)
-        return redirect(url_for('search_result', params=params))
-    return render_template('search.html', items=search_op)
+        script = request.form['script_radio']
+        if script == 'no_script':
+            return redirect(url_for('search_result', params=params))
+        else:
+            return redirect(url_for('run_script', params=params, script=script))
+    scripts = get_scripts()
+    return render_template('search.html', items=search_op, scripts=scripts)
 
 @app.route('/search/<params>')
 def search_result(params):
@@ -117,8 +122,14 @@ def search_result(params):
     result = do_search(params)
     return render_template('search_result.html', result=result)
 
+@app.route('/search/<params>/<script>')
+def run_script(params, script):
+    params = json.loads(params)
+    result = do_search_and_run_script(params, script)
+    return render_template('script.html', result=result)
+
 @app.route('/edit')
-@app.route('/edit/<primary_key>', methods=['GEt', 'POST'])
+@app.route('/edit/<primary_key>', methods=['GET', 'POST'])
 def edit_item(primary_key):
     if request.method == 'POST':
         columns = get_columns()
@@ -140,6 +151,14 @@ def edit_item(primary_key):
         return redirect(url_for('edit_item', primary_key=primary_key))
     columns = get_columns(primary_key)
     return render_template('edit.html', columns=columns)
+
+@app.route('/test', methods=['GET', 'POST'])
+def test():
+    if request.method == 'POST':
+        value = request.form['date_text']
+        print('value: [%s]' % value)
+        return redirect(url_for('test'))
+    return render_template('test.html')
 
 if __name__ == '__main__':
     app.debug = True

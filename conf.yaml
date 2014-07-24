@@ -12,3 +12,6 @@ daemon_pidfile_timeout: 3
 daemon_log_file: /tmp/account_tracking_daemon.log
 server_log_file: /tmp/account_tracking_server.log
 account_collection: account
+default_csv_string: ____NA____
+default_csv_delimiter: '&&&&'
+default_csv_prefix: /tmp/account_tracking_csv

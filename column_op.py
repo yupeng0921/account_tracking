@@ -16,6 +16,9 @@ class BasicColumn():
     def get_html_string(cls, inp):
         raise Exception('child should overwrite it')
     @classmethod
+    def get_csv_string(cls, inp):
+        raise Exception('child should overwrite it')
+    @classmethod
     def get_column_by_value(cls, value):
         raise Exception('child should overwrite it')
     @classmethod
@@ -47,6 +50,9 @@ class StringColumn(BasicColumn):
         return inp['text'].strip()
     @classmethod
     def get_html_string(cls, inp):
+        return inp
+    @classmethod
+    def get_csv_string(cls, inp):
         return inp
     @classmethod
     def get_column_by_value(cls, value):
@@ -102,6 +108,9 @@ class BooleanColumn(BasicColumn):
     def get_html_string(cls, inp):
         return inp
     @classmethod
+    def get_csv_string(cls, inp):
+        return inp
+    @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
         column['value'] = value
@@ -153,6 +162,9 @@ class TimeColumn(BasicColumn):
     def get_html_string(cls, inp):
         return inp
     @classmethod
+    def get_csv_string(cls, inp):
+        return inp
+    @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
         column['value'] = value
@@ -199,6 +211,11 @@ class MultiLineStringColumn(BasicColumn):
         for line in lines:
             html = '%s<p>%s</p>' % (html, line)
         return html
+    @classmethod
+    def get_csv_string(cls, inp):
+        lines = inp.split('\n')
+        csv_string = ' '.join(lines)
+        return csv_string
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
