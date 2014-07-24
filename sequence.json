@@ -9,5 +9,6 @@
     "Exception",
     "ExceptionApproved",
     "IPRecord",
-    "ICPRecord"
+    "ICPRecord",
+    "OpenIssues"
 ]

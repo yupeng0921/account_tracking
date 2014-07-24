@@ -180,6 +180,39 @@ class TimeColumn(BasicColumn):
     def get_value(self):
         return self.value
 
+class MultiLineStringColumn(BasicColumn):
+    export_type = 'textarea'
+    @classmethod
+    def get_search_op(cls):
+        op = {}
+        op['name'] = cls.__name__
+        op['type'] = cls.export_type
+        op['options'] = ['equal']
+        return op
+    @classmethod
+    def get_search_vaue(cls, inp):
+        return inp['text'].strip()
+    @classmethod
+    def get_html_string(cls, inp):
+        return inp
+    @classmethod
+    def get_column_by_value(cls, value):
+        column = cls.get_column_skeleton()
+        column['value'] = value
+        return column
+    @classmethod
+    def get_column_skeleton(cls):
+        column = {}
+        column['name'] = cls.__name__
+        column['type'] = cls.export_type
+        return column
+    @classmethod
+    def get_value_by_column(cls, column):
+        value = column['value']
+        return value
+    def __init(self, value):
+        self.value = value
+
 def varify_string_pattern(value, param):
     return True
 
@@ -208,6 +241,10 @@ def get_time_class(name, p):
     cls = classobj(str(name), (TimeColumn,),{})
     return cls
 
+def get_multilinestring_class(name, p):
+    cls = classobj(str(name), (MultiLineStringColumn,), {})
+    return cls
+
 g_class_dict = {}
 g_primary_column_name = None
 
@@ -223,6 +260,8 @@ for name in profile:
         cls = get_time_class(name, p)
     elif t == 'Boolean':
         cls = get_boolean_class(name, p)
+    elif t == 'MultiLineString':
+        cls = get_multilinestring_class(name, p)
     else:
         raise Exception('unsupport type: %s %s' % (name, t))
     g_class_dict[name] = cls

@@ -42,5 +42,8 @@
     },
     "ICPRecord" : {
         "Type" : "Time"
+    },
+    "OpenIssues" : {
+        "Type" : "MultiLineString"
     }
 }
