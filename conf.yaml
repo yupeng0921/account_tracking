@@ -15,3 +15,4 @@ accounts_collection_name: accounts
 default_csv_string: ____NA____
 default_csv_delimiter: '&&&&'
 scripts_collection_name: scripts
+awk_timeout: 3600

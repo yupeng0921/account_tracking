@@ -202,14 +202,6 @@ def get_script_body(script_name):
     body = get_script_body_by_name(script_name)
     return render_template('script_body.html', body=body)
 
-# @app.route('/test', methods=['GET', 'POST'])
-# def test():
-#     if request.method == 'POST':
-#         value = request.form['date_text']
-#         print('value: [%s]' % value)
-#         return redirect(url_for('test'))
-#     return render_template('test.html')
-
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=80)

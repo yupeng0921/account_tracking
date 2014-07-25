@@ -5,6 +5,7 @@ import logging
 import os
 import time
 from tempfile import TemporaryFile
+from subprocess import Popen, PIPE, STDOUT
 from pymongo import MongoClient
 from column_op import g_class_dict, g_all_classes, g_searchable_classes, g_primary_column_name
 
@@ -19,6 +20,7 @@ accounts_collection_name = conf['accounts_collection_name']
 default_csv_string = conf['default_csv_string']
 default_csv_delimiter = conf['default_csv_delimiter']
 scripts_collection_name = conf['scripts_collection_name']
+awk_timeout = conf['awk_timeout']
 
 client = MongoClient(mongodb_addr, mongodb_port)
 db = client[db_name]
@@ -156,7 +158,13 @@ def do_search_and_run_script(params, script_name):
             line = '%s\n' % line
         f.write(line)
     f.seek(0)
-    
+    body = get_script_body_by_name(script_name)
+    args = []
+    args.append('awk')
+    args.append(body)
+    p = Popen(args, stdin=f, stdout=PIPE, stderr=STDOUT)
+    stdout = p.communicate(timeout=awk_timeout)
+    print(stdout)
     return None
                 
 def get_columns(primary_key=None):
