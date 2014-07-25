@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import time
 import yaml
 import json
 import logging
@@ -25,20 +26,20 @@ class BasicColumn():
         """
         raise Exception('child should overwrite it')
     @classmethod
-    def get_html_string(cls, inp):
+    def get_html_string(cls, value):
         """
-        :type inp: string or dict or list
-        :param inp: value stored in mongodb
+        :type value: string or dict or list
+        :param value: value stored in mongodb
 
         :rtype: string
         :return: can be suitable shown in format html
         """
         raise Exception('child should overwrite it')
     @classmethod
-    def get_csv_string(cls, inp):
+    def get_csv_string(cls, value):
         """
-        :type inp: string or dict or list
-        :param inp: data stored in mongodb
+        :type value: string or dict or list
+        :param value: data stored in mongodb
 
         :rtype: string
         :return: can be suitable shown in csv file
@@ -78,10 +79,10 @@ class BasicColumn():
         :return: column name
         """
         raise Exception('child should overwrite it')
-    def __init__(self, value):
+    def __init__(self, inp):
         """
-        :type value: string
-        :param value: user input value from batch mode
+        :type inp: string
+        :param inp: user input value from batch mode
         """
         raise Exception('child should overwrite it')
     def get_value(self):
@@ -105,14 +106,16 @@ class StringColumn(BasicColumn):
     def get_search_value(cls, inp):
         return inp['text'].strip()
     @classmethod
-    def get_html_string(cls, inp):
-        return inp
+    def get_csv_string(cls, value):
+        return value
     @classmethod
-    def get_csv_string(cls, inp):
-        return inp
+    def get_html_string(cls, value):
+        return cls.get_csv_string(value)
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
+        if value == None:
+            value = ''
         column['value'] = value
         return column
     @classmethod
@@ -136,18 +139,18 @@ class StringColumn(BasicColumn):
             if not ret:
                 raise Exception('invalid value: %s %s %s' % \
                                     (value, param, method))
-    def __init__(self, value):
-        self._varify_value(value)
-        self.value = value
+    def __init__(self, inp):
+        self._varify_value(inp)
+        self.value = inp
     def get_value(self):
         return self.value
 
 class BooleanColumn(BasicColumn):
-    export_type = 'text'
+    export_type = 'boolean'
     true_values = ('True', 'Yes', 'yes', 'Y', 'y')
     false_values = ('False', 'No', 'no', 'N', 'n')
-    true_in_db = 'True'
-    false_in_db = 'False'
+    true_in_db = 'Yes'
+    false_in_db = 'No'
     @classmethod
     def get_search_op(cls):
         raise Exception('not support')
@@ -155,11 +158,11 @@ class BooleanColumn(BasicColumn):
     def get_search_value(cls, inp):
         raise Exception('not support')
     @classmethod
-    def get_html_string(cls, inp):
-        return inp
+    def get_csv_string(cls, value):
+        return value
     @classmethod
-    def get_csv_string(cls, inp):
-        return inp
+    def get_html_string(cls, value):
+        return value
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
@@ -173,31 +176,30 @@ class BooleanColumn(BasicColumn):
         return column
     @classmethod
     def get_value_by_column(cls, column):
-        value = column['value'].strip()
-        value = cls._get_value_from_input(value)
+        inp = column['value'].strip()
+        value = cls._get_value_from_input(inp)
         return value
     @classmethod
     def get_name(cls):
         return cls.name
     @classmethod
-    def _get_value_from_input(cls, value):
-        if not value:
-            return value
-        elif value in cls.true_values:
+    def _get_value_from_input(cls, inp):
+        if inp in cls.true_values:
             return cls.true_in_db
-        elif value in cls.false_values:
+        elif inp in cls.false_values:
             return cls.false_in_db
         else:
             raise Exception('invalid value for %s: %s' % \
                                 (cls.__name__, value))
-    def __init__(self, value):
-        self.get_value_by_column(value)
-        self.value = value
+    def __init__(self, inp):
+        self._get_value_from_input(inp)
+        self.value = inp
     def get_value(self):
         return self.value
 
 class TimeColumn(BasicColumn):
-    export_type = 'text'
+    export_type = 'time'
+    time_fmt = '%Y-%m-%d'
     @classmethod
     def get_search_op(cls):
         raise Exception('not support')
@@ -205,15 +207,15 @@ class TimeColumn(BasicColumn):
     def get_search_value(cls, inp):
         raise Exception('not support')
     @classmethod
-    def get_html_string(cls, inp):
-        return inp
+    def get_csv_string(cls, value):
+        return time.strftime(cls.time_fmt, time.gmtime(value))
     @classmethod
-    def get_csv_string(cls, inp):
-        return inp
+    def get_html_string(cls, value):
+        return cls.get_csv_string(value)
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
-        column['value'] = value
+        column['value'] = time.strftime(cls.time_fmt, time.gmtime(value))
         return column
     @classmethod
     def get_column_skeleton(cls):
@@ -223,29 +225,78 @@ class TimeColumn(BasicColumn):
         return column
     @classmethod
     def get_value_by_column(cls, column):
-        value = column['value'].strip()
-        cls._varify_value(value)
-        return value
+        return cls._get_value_by_input(column['value'].strip())
+    @classmethod
+    def _get_value_by_input(cls, inp):
+        epoch = time.mktime(time.strptime(inp, cls.time_fmt))
+        epoch = int(epoch)
+        return epoch
     @classmethod
     def get_name(cls):
         return cls.__name__
-    @classmethod
-    def _varify_value(cls, value):
-        pass
-    def __init__(self, value):
-        self._varify_value(value)
-        self.value = value
+    def __init__(self, inp):
+        self.value = self._get_value_by_input(inp)
     def get_value(self):
         return self.value
 
 class TimeEventColumn(BasicColumn):
     export_type = 'time_event'
+    time_fmt = '%Y-%m-%d'
+    checked_values = ('Yes', 'No')
     @classmethod
     def get_search_op(cls):
         raise Exception('not support')
     @classmethod
     def get_search_value(cls, inp):
         raise Exception('not support')
+    @classmethod
+    def get_csv_string(cls, value):
+        checked = value['checked']
+        epoch = value['epoch']
+        timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
+        return '%s/%s' % (timestr, checked)
+    @classmethod
+    def get_html_string(cls, value):
+        return cls.get_csv_string(value)
+    @classmethod
+    def get_column_by_value(cls, value):
+        column = cls.get_column_skeleton()
+        if value:
+            column['checked'] = value['checked']
+            epoch = value['epoch']
+            timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
+            column['timestr'] = timestr
+        else:
+            column['checked'] = None
+            column['timestr'] = None
+        return column
+    @classmethod
+    def get_column_skeleton(cls):
+        column = {}
+        column['name'] = cls.__name__
+        column['type'] = cls.export_type
+        return column
+    @classmethod
+    def get_value_by_column(cls, column):
+        return cls._get_value_by_input(column['value'].strip())
+    @classmethod
+    def _get_value_by_input(cls, inp):
+        timestr, checked = inp.split('/')
+        epoch = time.mktime(time.strptime(timestr, cls.time_fmt))
+        epoch = int(epoch)
+        ret = {}
+        if checked not in cls.checked_values:
+            raise Exception('invalid checked value: %s' % checked)
+        ret['checked'] = checked
+        ret['epoch'] = epoch
+        return ret
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
+    def __init__(self, inp):
+        self.value = self._get_value_by_input(inp.strip())
+    def get_value(self):
+        return value
 
 class MultiLineStringColumn(BasicColumn):
     export_type = 'textarea'
@@ -256,20 +307,20 @@ class MultiLineStringColumn(BasicColumn):
     def get_search_vaue(cls, inp):
         raise Exception('not support')
     @classmethod
-    def get_html_string(cls, inp):
-        lines = inp.split('\n')
+    def get_csv_string(cls, value):
+        return value.replace('\n', '\\n')
+    @classmethod
+    def get_html_string(cls, value):
+        lines = value.split('\n')
         html = ''
         for line in lines:
             html = '%s<p>%s</p>' % (html, line)
         return html
     @classmethod
-    def get_csv_string(cls, inp):
-        lines = inp.split('\n')
-        csv_string = ' '.join(lines)
-        return csv_string
-    @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
+        if value == None:
+            value = ''
         column['value'] = value
         return column
     @classmethod
@@ -282,8 +333,10 @@ class MultiLineStringColumn(BasicColumn):
     def get_value_by_column(cls, column):
         value = column['value']
         return value
-    def __init(self, value):
-        self.value = value
+    def __init__(self, inp):
+        self.value = inp.replace('\\n', '\n')
+    def get_value(self):
+        return value
 
 def varify_string_pattern(value, param):
     return True

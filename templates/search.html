@@ -10,6 +10,7 @@
 	</div>
 	<div class="col-md-3">
 	  <select class="form-control", id="{{item.name}}_option", name="{{item.name}}_option">
+		<option>match all</option>
 		{% for option in item.options %}
 		<option>{{option}}</option>
 		{% endfor %}

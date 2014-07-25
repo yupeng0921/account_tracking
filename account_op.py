@@ -175,7 +175,7 @@ def get_columns_by_key(primary_key):
         elif name in item:
             value = item[name]
         else:
-            value = ''
+            value = None
         column = class_type.get_column_by_value(value)
         columns.append(column)
     return columns
@@ -192,6 +192,8 @@ def set_columns(columns):
     keypairs = {}
     condition = None
     for column in columns:
+        if 'value' not in column:
+            continue
         name = column['name']
         class_type = g_class_dict[name]
         value = class_type.get_value_by_column(column)

@@ -103,7 +103,10 @@ def search():
             param = {}
             param['name'] = name
             if item['type'] == 'text':
-                param['option'] = request.form['%s_option' % name]
+                option = request.form['%s_option' % name]
+                if option == 'match all':
+                    continue
+                param['option'] = option
                 param['text'] = request.form['%s_text' % name]
             else:
                 raise Exception('unsupport type: %s' % item)
@@ -139,9 +142,23 @@ def edit_item(primary_key):
             if column['type'] == 'text':
                 value = request.form['%s_text' % name]
                 column['value'] = value
-            elif column['type'] == 'multichoice':
-                choices = request.form.getlist('%s_choices' % name)
-                column['choices'] = choices
+            elif column['type'] == 'boolean':
+                value = request.form['%s_boolean' % name]
+                if value == 'not set':
+                    continue
+                column['value'] = value
+            elif column['type'] == 'time':
+                value = request.form['%s_time' % name]
+                if not value:
+                    continue
+                column['value'] = value
+            elif column['type'] == 'time_event':
+                option = request.form['%s_time_event_option' % name]
+                if option == 'not set':
+                    continue
+                checked = option
+                timestr = request.form['%s_time_event_date' % name]
+                column['value'] = '%s/%s' % (timestr, checked)
             elif column['type'] == 'textarea':
                 value = request.form['%s_textarea' % name]
                 column['value'] = value

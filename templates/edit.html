@@ -14,21 +14,66 @@
 	  <input type="text" class="form-control" id="{{column.name}}_text" name="{{column.name}}_text" value="{{column.value}}">
 	</div>
   </div>
-  {% elif column.type == "multichoice" %}
+  {% elif column.type == "boolean" %}
   <div class="row">
 	<div class="col-md-3">
 	  <label> {{column.name}} </label>
 	</div>
 	<div class="col-md-3">
-	  {% for choice in column.choices %}
-	  <label class="checkbox">
-		<input type="checkbox" id="{{column.name}}_choices" name="{{column.name}}_choices" value="{{choice.name}}"
-			   {% if choice.checked == "true" %}
-			   checked="true"
-			   {% endif %}
-			   > {{choice.name}}
-	  </label>
-	  {% endfor %}
+	  <select class="form-control", id="{{column.name}}_boolean" name="{{column.name}}_boolean">
+		<option>not set</option>
+		<option
+		   {% if column.value == "Yes" %}
+		   selected="selected"
+		   {% endif %}
+		   >
+		  Yes
+		</option>
+		<option
+		   {% if column.value == "No" %}
+		   selected="selected"
+		   {% endif %}
+		   >
+		  No
+		</option>
+	  </select>
+	</div>
+  </div>
+  {% elif column.type == "time" %}
+  <div class="row">
+	<div class="col-md-3">
+	  <label> {{column.name}} </label>
+	</div>
+	<div class="col-md-3">
+	  <input type="date" class="form-control" id="{{column.name}}_time" name="{{column.name}}_time" value="{{column.value}}">
+	</div>
+  </div>
+  {% elif column.type == "time_event" %}
+  <div class="row">
+	<div class="col-md-3">
+	  <label> {{column.name}} </label>
+	</div>
+	<div class="col-md-3">
+	  <select class="form-control", id="{{column.name}}_time_event_option" name="{{column.name}}_time_event_option">
+		<option>not set</option>
+		<option
+		   {% if column.checked == "Yes" %}
+		   selected="selected"
+		   {% endif %}
+		   >
+		  Yes
+		</option>
+		<option
+		   {% if column.checked == "No" %}
+		   selected="selected"
+		   {% endif %}
+		   >
+		  No
+		</option>
+	  </select>
+	</div>
+	<div class="col-md-3">
+	  <input type="date" class="form-control" id="{{column.name}}_time_event_date" name="{{column.name}}_time_event_date" value="{{column.timestr}}">
 	</div>
   </div>
   {% elif column.type == "textarea" %}
