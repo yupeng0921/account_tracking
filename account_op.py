@@ -4,6 +4,7 @@ import yaml
 import logging
 import os
 import time
+from tempfile import TemporaryFile
 from pymongo import MongoClient
 from column_op import g_class_dict, g_all_classes, g_searchable_classes, g_primary_column_name
 
@@ -14,19 +15,20 @@ with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
 mongodb_addr = conf['mongodb_addr']
 mongodb_port = conf['mongodb_port']
 db_name = conf['db_name']
-account_collection = conf['account_collection']
+accounts_collection_name = conf['accounts_collection_name']
 default_csv_string = conf['default_csv_string']
 default_csv_delimiter = conf['default_csv_delimiter']
-default_csv_prefix = conf['default_csv_prefix']
+scripts_collection_name = conf['scripts_collection_name']
 
 client = MongoClient(mongodb_addr, mongodb_port)
 db = client[db_name]
-g_collection = db[account_collection]
+accounts_collection = db[accounts_collection_name]
+scripts_collection = db[scripts_collection_name]
 
 class AccountLines():
     class_dict = g_class_dict
     primary_column_name = g_primary_column_name
-    collection = g_collection
+    collection = accounts_collection
     def __init__(self, titles):
         for title in titles:
             if title not in self.class_dict:
@@ -105,7 +107,7 @@ def do_search(params):
             name = '_id'
         if value:
             keypairs.update({name: value})
-    items = g_collection.find(keypairs)
+    items = accounts_collection.find(keypairs)
     lines = []
     for item in items:
         columns = []
@@ -135,27 +137,26 @@ def do_search_and_run_script(params, script_name):
             name = '_id'
         if value:
             keypairs.update({name: value})
-    items = g_collection.find(keypairs)
-    timestamp = '%f' % time.time()
-    filename = '%s%s' % (default_csv_prefix, timestamp)
-    # f = open(filename, 'w')
-    # for item in items:
-    #     primary_key = item['_id']
-    #     csv_columns = []
-    #     for name in g_all_classes:
-    #         class_type = g_class_dict[name]
-    #         if name == g_primary_column_name:
-    #             name = '_id'
-    #         if name in item:
-    #             csv_string = class_type.get_csv_string(\
-    #                 item[name])
-    #         else:
-    #             csv_string = default_csv_string
-    #         csv_columns.append(csv_string)
-    #         line = default_csv_delimiter.join(csv_columns)
-    #         line = '%s\n' % line
-    #     f.write(line)
-    # f.close()
+    items = accounts_collection.find(keypairs)
+    f = TemporaryFile()
+    for item in items:
+        primary_key = item['_id']
+        csv_columns = []
+        for name in g_all_classes:
+            class_type = g_class_dict[name]
+            if name == g_primary_column_name:
+                name = '_id'
+            if name in item:
+                csv_string = class_type.get_csv_string(\
+                    item[name])
+            else:
+                csv_string = default_csv_string
+            csv_columns.append(csv_string)
+            line = default_csv_delimiter.join(csv_columns)
+            line = '%s\n' % line
+        f.write(line)
+    f.seek(0)
+    
     return None
                 
 def get_columns(primary_key=None):
@@ -166,7 +167,7 @@ def get_columns(primary_key=None):
 
 def get_columns_by_key(primary_key):
     columns = []
-    item = g_collection.find_one({'_id': primary_key})
+    item = accounts_collection.find_one({'_id': primary_key})
     for name in g_all_classes:
         class_type = g_class_dict[name]
         if name == g_primary_column_name:
@@ -199,9 +200,25 @@ def set_columns(columns):
         else:
             keypairs.update({name:value})
     assert condition
-    g_collection.update(condition, {'$set': keypairs})
+    accounts_collection.update(condition, {'$set': keypairs})
 
 def get_scripts():
+    items = scripts_collection.find()
     scripts = []
-    scripts.append('default statistics')
+    for item in items:
+        scripts.append(item['_id'])
     return scripts
+
+def upload_script(script_filename, script_name):
+    with open(script_filename, 'r') as f:
+        body = f.read()
+    ret = scripts_collection.insert({'_id': script_name, 'body': body})
+    logging.info('upload script: %s %s %s' % (script_filename, script_name, unicode(ret)))
+
+def delete_script(script_name):
+    ret = scripts_collection.remove({'_id': script_name})
+    logging.info('delete script: %s %s' % (script_name, unicode(ret)))
+
+def get_script_body_by_name(script_name):
+    ret = scripts_collection.find_one({'_id': script_name})
+    return ret['body']

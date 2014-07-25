@@ -8,31 +8,87 @@ from new import classobj
 class BasicColumn():
     @classmethod
     def get_search_op(cls):
+        """
+        :return the options dict
+        op['name'] = ColumnName
+        op['type'] = text
+        """
         raise Exception('child should overwrite it')
     @classmethod
     def get_search_value(cls, inp):
+        """
+        :type inp: dict
+        :param inp: search value, input by user
+
+        :rtype: string or dict
+        :return: parten can be used for mongodb find command
+        """
         raise Exception('child should overwrite it')
     @classmethod
     def get_html_string(cls, inp):
+        """
+        :type inp: string or dict or list
+        :param inp: value stored in mongodb
+
+        :rtype: string
+        :return: can be suitable shown in format html
+        """
         raise Exception('child should overwrite it')
     @classmethod
     def get_csv_string(cls, inp):
+        """
+        :type inp: string or dict or list
+        :param inp: data stored in mongodb
+
+        :rtype: string
+        :return: can be suitable shown in csv file
+        """
         raise Exception('child should overwrite it')
     @classmethod
     def get_column_by_value(cls, value):
+        """
+        :type value: string or dict or list
+        :param value: data stored in mongodb
+
+        :rtype: dict
+        :return: a dict include name, type and value
+        """
         raise Exception('child should overwrite it')
     @classmethod
     def get_column_skeleton(cls):
+        """
+        :rtype: dict
+        :return: a dict include name and type
+        """
         raise Exception('child should overwrite it')
     @classmethod
     def get_value_by_column(cls, column):
+        """
+        :type column: dict
+        :param column: user input
+
+        :rtype: string or dict or list
+        :return: data could be stored to mongodb
+        """
         raise Exception('child should overwrite it')
     @classmethod
     def get_name(cls):
+        """
+        :rtype: string
+        :return: column name
+        """
         raise Exception('child should overwrite it')
-    def __init__(self):
+    def __init__(self, value):
+        """
+        :type value: string
+        :param value: user input value from batch mode
+        """
         raise Exception('child should overwrite it')
     def get_value(self):
+        """
+        :rtype: string or dict or list
+        :return: data could be stored to mongodb
+        """
         raise Exception('child should overwrite it')
 
 class StringColumn(BasicColumn):
@@ -94,16 +150,10 @@ class BooleanColumn(BasicColumn):
     false_in_db = 'False'
     @classmethod
     def get_search_op(cls):
-        op = {}
-        op['name'] = cls.__name__
-        op['type'] = cls.export_type
-        op['options'] = ['equal']
-        return op
+        raise Exception('not support')
     @classmethod
     def get_search_value(cls, inp):
-        value = inp['text'].strip()
-        value = cls._get_value_from_input(value)
-        return value
+        raise Exception('not support')
     @classmethod
     def get_html_string(cls, inp):
         return inp
@@ -150,14 +200,10 @@ class TimeColumn(BasicColumn):
     export_type = 'text'
     @classmethod
     def get_search_op(cls):
-        op = {}
-        op['name'] = cls.__name__
-        op['type'] = cls.export_type
-        op['options'] = ['equal']
-        return op
+        raise Exception('not support')
     @classmethod
     def get_search_value(cls, inp):
-        return inp['text'].strip()
+        raise Exception('not support')
     @classmethod
     def get_html_string(cls, inp):
         return inp
@@ -192,18 +238,23 @@ class TimeColumn(BasicColumn):
     def get_value(self):
         return self.value
 
+class TimeEventColumn(BasicColumn):
+    export_type = 'time_event'
+    @classmethod
+    def get_search_op(cls):
+        raise Exception('not support')
+    @classmethod
+    def get_search_value(cls, inp):
+        raise Exception('not support')
+
 class MultiLineStringColumn(BasicColumn):
     export_type = 'textarea'
     @classmethod
     def get_search_op(cls):
-        op = {}
-        op['name'] = cls.__name__
-        op['type'] = cls.export_type
-        op['options'] = ['equal']
-        return op
+        raise Exception('not support')
     @classmethod
     def get_search_vaue(cls, inp):
-        return inp['text'].strip()
+        raise Exception('not support')
     @classmethod
     def get_html_string(cls, inp):
         lines = inp.split('\n')
@@ -255,11 +306,15 @@ def get_string_class(name, p):
     return cls
 
 def get_boolean_class(name, p):
-    cls = classobj(str(name), (BooleanColumn,),{})
+    cls = classobj(str(name), (BooleanColumn,), {})
     return cls
 
 def get_time_class(name, p):
-    cls = classobj(str(name), (TimeColumn,),{})
+    cls = classobj(str(name), (TimeColumn,), {})
+    return cls
+
+def get_time_event_class(name, p):
+    cls = classobj(str(name), (TimeEventColumn,), {})
     return cls
 
 def get_multilinestring_class(name, p):
@@ -279,6 +334,8 @@ for name in profile:
         cls = get_string_class(name, p)
     elif t == 'Time':
         cls = get_time_class(name, p)
+    elif t == 'TimeEvent':
+        cls = get_time_event_class(name, p)
     elif t == 'Boolean':
         cls = get_boolean_class(name, p)
     elif t == 'MultiLineString':

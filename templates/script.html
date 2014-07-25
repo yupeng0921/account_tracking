@@ -3,5 +3,28 @@
 {% block title %}script{% endblock %}
 
 {% block content %}
-<h1> hello world </h1>
+<form role="form" action="/script?action=upload" method="post" enctype="multipart/form-data">
+  <div class="form-group">
+	<label for="script_file">script file</label>
+	<input type="file" id="script_file" name="script_file">
+  </div>
+  <button type="submit" class="btn btn-default" id="submit" name="submit">Submit</button>
+</form>
+
+<p></p>
+
+<table class="table table-bordered">
+  {% for script in scripts %}
+  <tr class="active">
+	<td>
+	  <a id="{{script}}_body" name="{{script}}_body" href=/script/{{script}}>{{script}}</a>
+	</td>
+	<td>
+	  <form role="form" action="/script?action=delete&name={{script}}" method="post">
+		<button type="submit" class="btn btn-default" id="{{script}}_delete" name="{{script}}">delete</button>
+	  </form>
+	</td>
+  </tr>
+  {% endfor %}
+</table>
 {% endblock %}

@@ -18,7 +18,7 @@
         "Type" : "String"
     },
     "KickoffMeeting" : {
-        "Type" : "Time",
+        "Type" : "TimeEvent",
         "DefaultWarningTime" : "1 day before",
         "WarningActions" : [
             {

@@ -19,19 +19,6 @@
 	  <input type="text" class="form-control" id="{{item.name}}_text" name="{{item.name}}_text">
 	</div>
   </div>
-  {% elif item.type == "multichoice" %}
-  <div class="row">
-	<div class="col-md-3">
-	  <label> {{item.name}} </label>
-	</div>
-	<div class="col-md-3">
-	  {% for choice in item.choices %}
-	  <label class="checkbox">
-		<input type="checkbox" id="{{item.name}}_choices" name="{{item.name}}_choices" value="{{choice}}"> {{choice}}
-	  </label>
-	  {% endfor %}
-	</div>
-  </div>
   {% else %}
   <div class="row">
 	<label> unsupport type, {{item.type}}, {{item.name}} </label>

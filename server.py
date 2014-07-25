@@ -10,7 +10,7 @@ from flask import Flask, request, redirect, url_for, render_template, abort, Res
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user
 
-from account_op import search_op, do_search, get_columns, set_columns, get_scripts, do_search_and_run_script
+from account_op import search_op, do_search, get_columns, set_columns, get_scripts, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -68,6 +68,7 @@ def get_information():
     return (status, info)
     
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 @app.route('/', methods=['GET'])
 def index():
@@ -104,8 +105,8 @@ def search():
             if item['type'] == 'text':
                 param['option'] = request.form['%s_option' % name]
                 param['text'] = request.form['%s_text' % name]
-            elif item['type'] == 'multichoice':
-                param['choices'] = request.form.getlist('%s_choices' % name)
+            else:
+                raise Exception('unsupport type: %s' % item)
             params.append(param)
         params=json.dumps(params)
         script = request.form['script_radio']
@@ -126,7 +127,7 @@ def search_result(params):
 def run_script(params, script):
     params = json.loads(params)
     result = do_search_and_run_script(params, script)
-    return render_template('script.html', result=result)
+    return render_template('statistic.html', result=result)
 
 @app.route('/edit')
 @app.route('/edit/<primary_key>', methods=['GET', 'POST'])
@@ -152,13 +153,45 @@ def edit_item(primary_key):
     columns = get_columns(primary_key)
     return render_template('edit.html', columns=columns)
 
-@app.route('/test', methods=['GET', 'POST'])
-def test():
+@app.route('/script', methods=['GET', 'POST'])
+def script():
     if request.method == 'POST':
-        value = request.form['date_text']
-        print('value: [%s]' % value)
-        return redirect(url_for('test'))
-    return render_template('test.html')
+        action = request.args.get('action')
+        if action == 'upload':
+            script_file = request.files['script_file']
+            filename = secure_filename(script_file.filename)
+            script_filename = os.path.join(current_file_full_path, upload_folder, filename)
+            script_file.save(script_filename)
+            try:
+                upload_script(script_filename, filename)
+            except Exception, e:
+                os.remove(script_filename)
+                return unicode(e)
+            os.remove(script_filename)
+            return redirect(url_for('script'))
+        elif action == 'delete':
+            script_name = request.args.get('name')
+            print('delete: %s' % script_name)
+            try:
+                delete_script(script_name)
+            except Exception, e:
+                return unicode(e)
+            return redirect(url_for('script'))
+    scripts = get_scripts()
+    return render_template('script.html', scripts=scripts)
+
+@app.route('/script/<script_name>')
+def get_script_body(script_name):
+    body = get_script_body_by_name(script_name)
+    return render_template('script_body.html', body=body)
+
+# @app.route('/test', methods=['GET', 'POST'])
+# def test():
+#     if request.method == 'POST':
+#         value = request.form['date_text']
+#         print('value: [%s]' % value)
+#         return redirect(url_for('test'))
+#     return render_template('test.html')
 
 if __name__ == '__main__':
     app.debug = True
