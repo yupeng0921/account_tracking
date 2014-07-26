@@ -122,8 +122,8 @@ def search_result(params):
 @app.route('/search/<params>/<script>')
 def run_script(params, script):
     params = json.loads(params)
-    result = do_search_and_run_script(params, script)
-    return render_template('statistic.html', result=result)
+    graphs = do_search_and_run_script(params, script)
+    return render_template('statistic.html', graphs=graphs)
 
 @app.route('/edit')
 @app.route('/edit/<primary_key>', methods=['GET', 'POST'])

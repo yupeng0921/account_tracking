@@ -215,7 +215,10 @@ class TimeColumn(BasicColumn):
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
-        column['value'] = time.strftime(cls.time_fmt, time.gmtime(value))
+        if value:
+            column['value'] = time.strftime(cls.time_fmt, time.gmtime(value))
+        else:
+            column['value'] = None
         return column
     @classmethod
     def get_column_skeleton(cls):

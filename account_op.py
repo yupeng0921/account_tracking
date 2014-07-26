@@ -4,6 +4,7 @@ import yaml
 import logging
 import os
 import time
+from uuid import uuid4
 from tempfile import TemporaryFile
 from subprocess import Popen, PIPE, STDOUT
 from pymongo import MongoClient
@@ -21,6 +22,9 @@ default_csv_string = conf['default_csv_string']
 default_csv_delimiter = conf['default_csv_delimiter']
 scripts_collection_name = conf['scripts_collection_name']
 awk_timeout = conf['awk_timeout']
+graph_name_key = conf['graph_name_key']
+graph_type_key = conf['graph_type_key']
+graph_members_key = conf['graph_members_key']
 
 client = MongoClient(mongodb_addr, mongodb_port)
 db = client[db_name]
@@ -162,13 +166,60 @@ def do_search_and_run_script(params, script_name):
         f.write(line)
     f.seek(0)
     body = get_script_body_by_name(script_name)
-    args = []
-    args.append('awk')
-    args.append(body)
-    p = Popen(args, stdin=f, stdout=PIPE, stderr=STDOUT)
-    stdout = p.communicate(timeout=awk_timeout)
+    awk_filename = '/tmp/account_tracking_%s' % uuid4()
+    with open(awk_filename, 'w') as f_awk:
+        f_awk.write(body)
+    # args = []
+    # args.append('awk')
+    # args.append('-F')
+    # args.append("'%s'" % default_csv_delimiter)
+    # args.append('-v')
+    # args.append('_empty=%s' % default_csv_string)
+    # index = 1
+    # for name in g_all_classes:
+    #     args.append('-v')
+    #     args.append('%s=%d' % (name, index))
+    #     index ++ 1
+    # args.append(body)
+    args = "awk -F '%s' -v _empty=%s -f %s" % \
+        (default_csv_delimiter, default_csv_string, awk_filename)
+    index = 1
+    for name in g_all_classes:
+        v = '-v %s=%d' % (name, index)
+        args = "%s %s" % (args, v)
+        index += 1
+    print(args)
+    p = Popen(args, stdin=f, stdout=PIPE, stderr=STDOUT, shell=True)
+    stdout = p.communicate(timeout=awk_timeout)[0]
     print(stdout)
-    return None
+    os.remove(awk_filename)
+    f.close()
+    graphs = []
+    graph = None
+    output_lines = stdout.split('\n')
+    for output_line in output_lines:
+        output_line = output_line.strip()
+        if not output_line:
+            continue
+        k, v = output_line.split(':')
+        k = k.strip()
+        v = v.strip()
+        if k == graph_name_key:
+            if graph:
+                assert graph_type_key in graph
+                graphs.append(graph)
+            graph = {}
+            graph[graph_name_key] = v
+            graph[graph_members_key] = []
+        elif k == graph_type_key:
+            graph[graph_type_key] = v
+        else:
+            member = {'name': k, 'value': v}
+            graph[graph_members_key].append(member)
+    if graph:
+        assert graph_type_key in graph
+        graphs.append(graph)
+    return graphs
                 
 def get_columns(primary_key=None):
     if not primary_key:

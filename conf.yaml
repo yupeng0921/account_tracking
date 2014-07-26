@@ -7,3 +7,6 @@ default_csv_string: ____NA____
 default_csv_delimiter: '&&&&'
 scripts_collection_name: scripts
 awk_timeout: 3600
+graph_name_key: graph_name
+graph_type_key: graph_type
+graph_members_key: members
