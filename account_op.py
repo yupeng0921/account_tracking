@@ -169,18 +169,6 @@ def do_search_and_run_script(params, script_name):
     awk_filename = '/tmp/account_tracking_%s' % uuid4()
     with open(awk_filename, 'w') as f_awk:
         f_awk.write(body)
-    # args = []
-    # args.append('awk')
-    # args.append('-F')
-    # args.append("'%s'" % default_csv_delimiter)
-    # args.append('-v')
-    # args.append('_empty=%s' % default_csv_string)
-    # index = 1
-    # for name in g_all_classes:
-    #     args.append('-v')
-    #     args.append('%s=%d' % (name, index))
-    #     index ++ 1
-    # args.append(body)
     args = "awk -F '%s' -v _empty=%s -f %s" % \
         (default_csv_delimiter, default_csv_string, awk_filename)
     index = 1
@@ -192,7 +180,10 @@ def do_search_and_run_script(params, script_name):
     p = Popen(args, stdin=f, stdout=PIPE, stderr=STDOUT, shell=True)
     stdout = p.communicate(timeout=awk_timeout)[0]
     print(stdout)
-    os.remove(awk_filename)
+    # os.remove(awk_filename)
+    f.seek(0)
+    with open('/tmp/test1.csv', 'w') as ftest:
+        ftest.write(f.read())
     f.close()
     graphs = []
     graph = None
