@@ -9,13 +9,10 @@
 $(function () {
 $('#container').highcharts({
 chart: {
-type: 'bar'
+type: 'pie'
 },
 title: {
 text: 'Fruit Consumption'
-},
-xAxis: {
-categories: ['Apples', 'Bananas', 'Oranges']
 },
 yAxis: {
 title: {
@@ -23,11 +20,16 @@ text: 'Fruit eaten'
 }
 },
 series: [{
-name: 'Jane',
-data: [1, 0, 4]
-}, {
-name: 'John',
-data: [5, 70, 3]
+data: [{
+name: 'apple',
+y: 10
+},{
+name: 'orange',
+y: 50
+},{
+name: 'bnana',
+y: 100
+}]
 }]
 });
 });

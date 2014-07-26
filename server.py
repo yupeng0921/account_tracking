@@ -10,7 +10,8 @@ from flask import Flask, request, redirect, url_for, render_template, abort, Res
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user
 
-from account_op import search_op, do_search, get_columns, set_columns, get_scripts, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name
+from account_op import search_op, do_search, get_columns, set_columns, get_scripts, \
+    upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -74,6 +75,37 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 def index():
     return render_template('index.html')
 
+def do_upload(action, fullpath):
+    f = open(fullpath, 'r')
+    titles = f.next().split(',')
+    titles = [title.strip() for title in titles]
+    try:
+        account_lines = AccountLines(titles)
+    except Exception, e:
+        msg = '%s failed\n%s' % (action, unicode(e))
+        raise Exception(msg)
+    varify_errors = []
+    line_number = 1
+    for eachline in f:
+        line_number += 1
+        values = eachline.split(',')
+        values = [value.strip() for value in values]
+        try:
+            account_lines.add_line(values)
+        except Exception, e:
+            logging.error(unicode(e))
+            varify_errors.append(line_number)
+    if varify_errors:
+        msg = 'varify failed: %s' % varify_errors
+        raise Exception(msg)
+    action_error = None
+    if action == 'create':
+        account_lines.create_account()
+    elif action == 'update':
+        account_lines.update_account()
+    elif action == 'delete':
+        account_lines.delete_account()
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
@@ -85,14 +117,13 @@ def upload():
         upload_file.save(upload_filename)
         action = request.form['actionsRadios']
         try:
-            send_message(action, upload_filename)
+            do_upload(action, upload_filename)
         except Exception, e:
             os.remove(upload_filename)
             return unicode(e)
+        os.remove(upload_filename)
         return redirect(url_for('upload'))
-    (status, info) = get_information()
-    status_and_info = '%s\n%s' % (status, info)
-    return render_template('upload.html', status_and_info=status_and_info)
+    return render_template('upload.html')
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():

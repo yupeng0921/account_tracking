@@ -8,7 +8,7 @@ import logging
 from pymongo import MongoClient
 from daemon import runner
 
-from account_op import AccountLines
+# from account_op import AccountLines
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -86,6 +86,7 @@ class RunTask():
         self.pidfile_path = pidfile_path
         self.pidfile_timeout = pidfile_timeout
     def run(self):
+        from account_op import AccountLines
         format = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
         datefmt='%Y-%m-%d %H:%M:%S'
         level = logging.INFO

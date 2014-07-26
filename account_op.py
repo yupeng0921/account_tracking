@@ -49,7 +49,8 @@ class AccountLines():
         self.lines.append(column_objs)
     def _insert(self, keypairs):
         logging.debug('insert: %s' % keypairs)
-        self.collection.insert(keypairs)
+        ret = self.collection.insert(keypairs)
+        logging.debug('insert result: %s' % ret)
     def create_account(self):
         for column_objs in self.lines:
             keypairs = {}
@@ -62,7 +63,8 @@ class AccountLines():
             self._insert(keypairs)
     def _update(self, primary, keypairs):
         logging.debug('update: %s %s' % (primary, keypairs))
-        self.collection.update(primary, {'$set': keypairs})
+        ret = self.collection.update(primary, {'$set': keypairs})
+        logging.debug('update result: %s' % ret)
     def update_account(self):
         for column_objs in self.lines:
             keypairs = {}
@@ -75,10 +77,11 @@ class AccountLines():
                 else:
                     keypairs.update({name: value})
             assert primary
-            self._update(primary, keykpairs)
+            self._update(primary, keypairs)
     def _delete(self, primary):
         logging.debug('delete: %s' % primary)
-        self.collection.remove(primary)
+        ret = self.collection.remove(primary)
+        logging.debug('delete result: %s' % ret)
     def delete_account(self):
         primary = None
         for column_objs in self.lines:
