@@ -181,7 +181,7 @@ class BooleanColumn(BasicColumn):
         return value
     @classmethod
     def get_name(cls):
-        return cls.name
+        return cls.__name__
     @classmethod
     def _get_value_from_input(cls, inp):
         if inp in cls.true_values:
@@ -296,7 +296,7 @@ class TimeEventColumn(BasicColumn):
     def __init__(self, inp):
         self.value = self._get_value_by_input(inp.strip())
     def get_value(self):
-        return value
+        return self.value
 
 class MultiLineStringColumn(BasicColumn):
     export_type = 'textarea'

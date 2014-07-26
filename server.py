@@ -5,6 +5,7 @@ import time
 import yaml
 import json
 import logging
+import traceback
 from pymongo import MongoClient
 from flask import Flask, request, redirect, url_for, render_template, abort, Response
 from werkzeug import secure_filename
@@ -80,7 +81,8 @@ def upload():
             do_upload(action, upload_filename)
         except Exception, e:
             os.remove(upload_filename)
-            return unicode(e)
+            msg = traceback.format_exc()
+            return unicode(msg)
         os.remove(upload_filename)
         return redirect(url_for('upload'))
     return render_template('upload.html')
