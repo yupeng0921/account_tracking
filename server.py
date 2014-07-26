@@ -20,8 +20,6 @@ with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
 mongodb_addr = conf['mongodb_addr']
 mongodb_port = conf['mongodb_port']
 db_name = conf['db_name']
-message_collection = conf['message_collection']
-message_magic_key = conf['message_magic_key']
 server_log_file = conf['server_log_file']
 
 upload_folder = 'upload'
@@ -30,44 +28,6 @@ format = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
 datefmt='%Y-%m-%d %H:%M:%S'
 logging.basicConfig(filename=server_log_file, level=logging.DEBUG, format=format, datefmt=datefmt)
 
-def send_message(action, fullpath):
-    '''
-    action should be create, update or delete
-    fullpath is the full path of the csv file
-    '''
-    if action not in ('create', 'update', 'delete'):
-        raise Exception('invalid action: %s' % action)
-    client = MongoClient(mongodb_addr, mongodb_port)
-    db = client[db_name]
-    collection = db[message_collection]
-    message = {
-        'action': action,
-        'fullpath': fullpath,
-        'status': 'doing'
-        }
-    condition = {'_id': message_magic_key, 'status': 'idle'}
-    ret = collection.update(condition, message)
-    if not ret['updatedExisting']:
-        raise Exception('send message failed')
-
-def get_information():
-    '''
-    return (status, info)
-    status is doing or idle
-    info is set by daemon
-    '''
-    client = MongoClient(mongodb_addr, mongodb_port)
-    db = client[db_name]
-    collection = db[message_collection]
-    condition = {'_id': message_magic_key}
-    ret = collection.find_one(condition, {'status':1,'info':1})
-    status = ret['status']
-    if 'info' in ret:
-        info = ret['info']
-    else:
-        info = ''
-    return (status, info)
-    
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
