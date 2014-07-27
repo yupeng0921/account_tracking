@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
 import os
-import time
 import yaml
 import json
 import logging
 import traceback
+from uuid import uuid4
 from pymongo import MongoClient
 from flask import Flask, request, redirect, url_for, render_template, abort, Response
 from werkzeug import secure_filename
@@ -150,8 +150,7 @@ def upload():
     if request.method == 'POST':
         upload_file = request.files['upload_file']
         filename = secure_filename(upload_file.filename)
-        timestamp = '%f' % time.time()
-        upload_filename = '%s.%s' % (timestamp, filename)
+        upload_filename = '%s.%s' % (uuid4(), filename)
         upload_filename = os.path.join(current_file_full_path, upload_folder, upload_filename)
         upload_file.save(upload_filename)
         action = request.form['actionsRadios']
