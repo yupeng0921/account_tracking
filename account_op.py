@@ -176,15 +176,9 @@ def do_search_and_run_script(params, script_name):
         v = '-v %s=%d' % (name, index)
         args = "%s %s" % (args, v)
         index += 1
-    print(args)
     p = Popen(args, stdin=f, stdout=PIPE, stderr=STDOUT, shell=True)
     stdout = p.communicate(timeout=awk_timeout)[0]
-    print(stdout)
-    # os.remove(awk_filename)
-    f.seek(0)
-    with open('/tmp/test1.csv', 'w') as ftest:
-        ftest.write(f.read())
-    f.close()
+    os.remove(awk_filename)
     graphs = []
     graph = None
     output_lines = stdout.split('\n')
