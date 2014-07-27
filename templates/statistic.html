@@ -51,7 +51,25 @@
 {% block content %}
 
 {% for graph in graphs %}
-<div id="{{graph.graph_name}}_container" style="width:50%; height:50%;"></div>
+<div class="row">
+  <div class="col-md-4">
+	<table class="table table-bordered">
+	  <tr>
+		<td> {{graph.graph_name}} </td>
+		<td> </td>
+	  </tr>
+	  {% for member in graph.members %}
+	  <tr>
+		<td> {{member.name}} </td>
+		<td> {{member.value}} </td>
+	  </tr>
+	  {% endfor %}
+	</table>
+  </div>
+  <div class="col-md-6">
+	<div id="{{graph.graph_name}}_container" style="width:100%; height:100%;"></div>
+  </div>
+</div>
 <p></p>
 {% endfor %}
 
