@@ -48,8 +48,11 @@ class AccountLines():
         for title in self.titles:
             value = values.pop(0)
             column_class = self.class_dict[title]
-            column_obj = column_class(value)
-            column_objs.append(column_obj)
+            if value:
+                column_obj = column_class(value)
+                column_objs.append(column_obj)
+            elif column_class.get_name() == self.primary_column_name:
+                raise Exception('primary key %s should not be empty' % self.primary_column_name)
         self.lines.append(column_objs)
     def _insert(self, keypairs):
         logging.debug('insert: %s' % keypairs)
