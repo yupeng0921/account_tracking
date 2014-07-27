@@ -9,7 +9,7 @@ import traceback
 from pymongo import MongoClient
 from flask import Flask, request, redirect, url_for, render_template, abort, Response
 from werkzeug import secure_filename
-from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user
+from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user, current_user
 
 from account_op import search_op, do_search, get_columns, set_columns, get_scripts, \
     upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
@@ -22,6 +22,7 @@ mongodb_addr = conf['mongodb_addr']
 mongodb_port = conf['mongodb_port']
 db_name = conf['db_name']
 server_log_file = conf['server_log_file']
+login_file = conf['login_file']
 
 upload_folder = 'upload'
 
@@ -30,11 +31,88 @@ datefmt='%Y-%m-%d %H:%M:%S'
 logging.basicConfig(filename=server_log_file, level=logging.DEBUG, format=format, datefmt=datefmt)
 
 app = Flask(__name__)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+class User(UserMixin):
+    def __init__(self, username, password, userid, active=True):
+        self.userid = userid
+        self.username = username
+        self.password = password
+        self.active = active
+    def get_id(self):
+        return self.userid
+    def is_active(self):
+        return self.active
+
+class UsersRepository():
+    def __init__(self):
+        self.users_id = dict()
+        self.users_name = dict()
+        self.identifier = 0
+    def save_user(self, user):
+        self.users_id[user.userid] = user
+        self.users_name[user.username] = user
+    def get_user_by_name(self, username):
+        return self.users_name.get(username)
+    def get_user_by_id(self, userid):
+        return self.users_id.get(userid)
+    def next_index(self):
+        self.identifier += 1
+        return self.identifier
+
+users_repository = UsersRepository()
+
+with open(login_file) as f:
+    login_profile = yaml.safe_load(f)
+for user in login_profile['users']:
+    username = user['username']
+    password = user['password']
+    new_user = User(username, password, users_repository.next_index())
+    users_repository.save_user(new_user)
+
+@login_manager.user_loader
+def load_user(userid):
+    return users_repository.get_user_by_id(userid)
+
+app.config['SECRET_KEY'] = unicode(login_profile['secret_key'])
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 @app.route('/', methods=['GET'])
+@login_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html', user=current_user)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        registeredUser = users_repository.get_user_by_name(username)
+        logging.info(registeredUser)
+        if registeredUser:
+            logging.info(registeredUser.password)
+        if registeredUser != None and unicode(registeredUser.password) == unicode(password):
+            login_user(registeredUser)
+            return redirect(url_for('index'))
+        else:
+            logging.warning('invalide username or password: %s %s' % (username, password))
+            return abort(401)
+    else:
+        return Response('''
+<form actoin="" method="post">
+<p><input type=text id=username name=username>
+<p><input type=password id=password name=password>
+<p><input type=submit id=login_submit name=login_submit value=Login>
+</form>
+''')
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 def do_upload(action, fullpath):
     f = open(fullpath, 'r')
@@ -85,7 +163,7 @@ def upload():
             return unicode(msg)
         os.remove(upload_filename)
         return redirect(url_for('upload'))
-    return render_template('upload.html')
+    return render_template('upload.html', user=current_user)
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -111,19 +189,19 @@ def search():
         else:
             return redirect(url_for('run_script', params=params, script=script))
     scripts = get_scripts()
-    return render_template('search.html', items=search_op, scripts=scripts)
+    return render_template('search.html', items=search_op, scripts=scripts, user=current_user)
 
 @app.route('/search/<params>')
 def search_result(params):
     params = json.loads(params)
     result = do_search(params)
-    return render_template('search_result.html', result=result)
+    return render_template('search_result.html', result=result, user=current_user)
 
 @app.route('/search/<params>/<script>')
 def run_script(params, script):
     params = json.loads(params)
     graphs = do_search_and_run_script(params, script)
-    return render_template('statistic.html', graphs=graphs)
+    return render_template('statistic.html', graphs=graphs, user=current_user)
 
 @app.route('/edit')
 @app.route('/edit/<primary_key>', methods=['GET', 'POST'])
@@ -161,7 +239,7 @@ def edit_item(primary_key):
         set_columns(columns)
         return redirect(url_for('edit_item', primary_key=primary_key))
     columns = get_columns(primary_key)
-    return render_template('edit.html', columns=columns)
+    return render_template('edit.html', columns=columns, user=current_user)
 
 @app.route('/script', methods=['GET', 'POST'])
 def script():
@@ -188,12 +266,12 @@ def script():
                 return unicode(e)
             return redirect(url_for('script'))
     scripts = get_scripts()
-    return render_template('script.html', scripts=scripts)
+    return render_template('script.html', scripts=scripts, user=current_user)
 
 @app.route('/script/<script_name>')
 def get_script_body(script_name):
     body = get_script_body_by_name(script_name)
-    return render_template('script_body.html', body=body)
+    return render_template('script_body.html', body=body, user=current_user)
 
 if __name__ == '__main__':
     app.debug = True

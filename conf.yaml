@@ -10,3 +10,4 @@ awk_timeout: 3600
 graph_name_key: graph_name
 graph_type_key: graph_type
 graph_members_key: members
+login_file: /tmp/account_tracking_login.yaml
