@@ -48,11 +48,11 @@ class AccountLines():
         for title in self.titles:
             value = values.pop(0)
             column_class = self.class_dict[title]
-            if value:
+            if not value and column_class.get_name() == self.primary_column_name:
+                raise Exception('primary key %s should not be empty' % self.primary_column_name)
+            elif value or column_class.accept_empty:
                 column_obj = column_class(value)
                 column_objs.append(column_obj)
-            elif column_class.get_name() == self.primary_column_name:
-                raise Exception('primary key %s should not be empty' % self.primary_column_name)
         self.lines.append(column_objs)
     def _insert(self, keypairs):
         logging.debug('insert: %s' % keypairs)
@@ -138,6 +138,37 @@ def do_search(params):
         lines.append(line)
     result['lines'] = lines
     return result
+
+def generate_csv(params):
+    keypairs = {}
+    for param in params:
+        name = param['name']
+        class_type = g_class_dict[name]
+        value = class_type.get_search_value(param)
+        if name == g_primary_column_name:
+            name = '_id'
+        if value:
+            keyparis.update({name: value})
+    items = accounts_collection.find(keypairs)
+    lines = []
+    line = default_csv_delimiter.join(g_all_classes)
+    lines.append(line)
+    for item in items:
+        csv_columns =[]
+        primary_key = item['_id']
+        for name in g_all_classes:
+            class_type = g_class_dict[name]
+            if name == g_primary_column_name:
+                name = '_id'
+            if name in item:
+                csv_string = class_type.get_csv_string(item[name])
+            else:
+                csv_string = default_csv_string
+            csv_columns.append(csv_string)
+        line = default_csv_delimiter.join(csv_columns)
+        lines.append(line)
+    lines = '\n'.join(lines)
+    return lines
 
 def do_search_and_run_script(params, script_name):
     keypairs = {}

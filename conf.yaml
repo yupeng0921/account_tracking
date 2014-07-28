@@ -3,8 +3,8 @@ mongodb_port: 27017
 db_name: account_info
 server_log_file: /tmp/account_tracking_server.log
 accounts_collection_name: accounts
-default_csv_string: ____NA____
-default_csv_delimiter: '&&&&'
+default_csv_string: ''
+default_csv_delimiter: ','
 scripts_collection_name: scripts
 awk_timeout: 3600
 graph_name_key: graph_name

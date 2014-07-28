@@ -7,11 +7,11 @@ import logging
 import traceback
 from uuid import uuid4
 from pymongo import MongoClient
-from flask import Flask, request, redirect, url_for, render_template, abort, Response
+from flask import Flask, request, redirect, url_for, render_template, abort, Response, make_response
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user, current_user
 
-from account_op import search_op, do_search, get_columns, set_columns, get_scripts, \
+from account_op import search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, \
     upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
@@ -192,9 +192,9 @@ def search():
 
 @app.route('/search/<params>')
 def search_result(params):
-    params = json.loads(params)
-    result = do_search(params)
-    return render_template('search_result.html', result=result, user=current_user)
+    j_params = json.loads(params)
+    result = do_search(j_params)
+    return render_template('search_result.html', result=result, params=params, user=current_user)
 
 @app.route('/search/<params>/<script>')
 def run_script(params, script):
@@ -240,6 +240,15 @@ def edit_item(primary_key):
     columns = get_columns(primary_key)
     return render_template('edit.html', columns=columns, user=current_user)
 
+@app.route('/download')
+@app.route('/download/<params>')
+def download(params):
+    j_params = json.loads(params)
+    result = generate_csv(j_params)
+    response = make_response(result)
+    response.headers["Content-Disposition"] = "attachment; filename=download.csv"
+    return response
+
 @app.route('/script', methods=['GET', 'POST'])
 def script():
     if request.method == 'POST':
@@ -258,7 +267,6 @@ def script():
             return redirect(url_for('script'))
         elif action == 'delete':
             script_name = request.args.get('name')
-            print('delete: %s' % script_name)
             try:
                 delete_script(script_name)
             except Exception, e:

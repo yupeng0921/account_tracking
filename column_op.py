@@ -7,6 +7,7 @@ import logging
 from new import classobj
 
 class BasicColumn():
+    accept_empty = False
     @classmethod
     def get_search_op(cls):
         """
@@ -303,6 +304,7 @@ class TimeEventColumn(BasicColumn):
 
 class MultiLineStringColumn(BasicColumn):
     export_type = 'textarea'
+    accept_empty = True
     @classmethod
     def get_search_op(cls):
         raise Exception('not support')
@@ -311,7 +313,9 @@ class MultiLineStringColumn(BasicColumn):
         raise Exception('not support')
     @classmethod
     def get_csv_string(cls, value):
-        return value.replace('\n', '\\n')
+        value = value.replace('<newline>', '\\n')
+        value = value.replace('<comma>', ',')
+        return value
     @classmethod
     def get_html_string(cls, value):
         lines = value.split('\n')
@@ -337,9 +341,11 @@ class MultiLineStringColumn(BasicColumn):
         value = column['value']
         return value
     def __init__(self, inp):
-        self.value = inp.replace('\\n', '\n')
+        inp = inp.replace('<newline>', '\n')
+        inp = inp.replace('<comma>', ',')
+        self.value = inp
     def get_value(self):
-        return value
+        return self.value
 
 def varify_string_pattern(value, param):
     return True
