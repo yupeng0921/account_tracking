@@ -3,16 +3,16 @@
 import os
 import yaml
 import json
+import zipfile
 import logging
 import traceback
 from uuid import uuid4
-from pymongo import MongoClient
 from flask import Flask, request, redirect, url_for, render_template, abort, Response, make_response
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user, current_user
 
-from account_op import search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, \
-    upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
+from account_op import search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
+    get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -146,6 +146,7 @@ def do_upload(action, fullpath):
         account_lines.delete_account()
 
 @app.route('/upload', methods=['GET', 'POST'])
+@login_required
 def upload():
     if request.method == 'POST':
         upload_file = request.files['upload_file']
@@ -165,6 +166,7 @@ def upload():
     return render_template('upload.html', user=current_user)
 
 @app.route('/search', methods=['GET', 'POST'])
+@login_required
 def search():
     if request.method == 'POST':
         params = []
@@ -191,12 +193,14 @@ def search():
     return render_template('search.html', items=search_op, scripts=scripts, user=current_user)
 
 @app.route('/search/<params>')
+@login_required
 def search_result(params):
     j_params = json.loads(params)
     result = do_search(j_params)
     return render_template('search_result.html', result=result, params=params, user=current_user)
 
 @app.route('/search/<params>/<script>')
+@login_required
 def run_script(params, script):
     params = json.loads(params)
     graphs = do_search_and_run_script(params, script)
@@ -204,6 +208,7 @@ def run_script(params, script):
 
 @app.route('/edit')
 @app.route('/edit/<primary_key>', methods=['GET', 'POST'])
+@login_required
 def edit_item(primary_key):
     if request.method == 'POST':
         columns = get_columns()
@@ -242,6 +247,7 @@ def edit_item(primary_key):
 
 @app.route('/download')
 @app.route('/download/<params>')
+@login_required
 def download(params):
     j_params = json.loads(params)
     result = generate_csv(j_params)
@@ -250,6 +256,7 @@ def download(params):
     return response
 
 @app.route('/script', methods=['GET', 'POST'])
+@login_required
 def script():
     if request.method == 'POST':
         action = request.args.get('action')
@@ -276,9 +283,28 @@ def script():
     return render_template('script.html', scripts=scripts, user=current_user)
 
 @app.route('/script/<script_name>')
+@login_required
 def get_script_body(script_name):
     body = get_script_body_by_name(script_name)
     return render_template('script_body.html', body=body, user=current_user)
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        columns_format_file = request.files['columns_format_file']
+        filename = secure_filename(columns_format_file.filename)
+        columns_format_filename = os.path.join(current_file_full_path, upload_folder, filename)
+        columns_format_file.save(columns_format_filename)
+        try:
+            update_columns_format(columns_format_filename)
+        except Exception, e:
+            os.remove(columns_format_filename)
+            return unicode(e)
+        os.remove(columns_format_filename)
+        return redirect(url_for('profile'))
+    profile = get_columns_format()
+    return render_template('profile.html', profile=profile, user=current_user)
 
 if __name__ == '__main__':
     app.debug = True

@@ -385,34 +385,39 @@ def get_multilinestring_class(name, p):
 
 g_class_dict = {}
 g_primary_column_name = None
+g_all_classes = []
+g_searchable_classes = []
 
-with open('profile.json') as f:
-    profile = json.load(f)
+def generate_columns_profile(body):
+    global g_class_dict
+    global g_primary_column_name
+    global g_all_classes
+    global g_searchable_classes
 
-for name in profile:
-    p = profile[name]
-    t = p['Type']
-    if t == 'String':
-        cls = get_string_class(name, p)
-    elif t == 'Time':
-        cls = get_time_class(name, p)
-    elif t == 'TimeEvent':
-        cls = get_time_event_class(name, p)
-    elif t == 'Boolean':
-        cls = get_boolean_class(name, p)
-    elif t == 'MultiLineString':
-        cls = get_multilinestring_class(name, p)
-    else:
-        raise Exception('unsupport type: %s %s' % (name, t))
-    g_class_dict[name] = cls
-    if 'IsPrimary' in p:
-        assert not g_primary_column_name
-        g_primary_column_name = name
+    body = json.loads(body)
+    profile = body['profile']
+    for name in profile:
+        p = profile[name]
+        t = p['Type']
+        if t == 'String':
+            cls = get_string_class(name, p)
+        elif t == 'Time':
+            cls = get_time_class(name, p)
+        elif t == 'TimeEvent':
+            cls = get_time_event_class(name, p)
+        elif t == 'Boolean':
+            cls = get_boolean_class(name, p)
+        elif t == 'MultiLineString':
+            cls = get_multilinestring_class(name, p)
+        else:
+            raise Exception('unsupport type: %s %s' % (name, t))
+        g_class_dict[name] = cls
+        if 'IsPrimary' in p:
+            assert not g_primary_column_name
+            g_primary_column_name = name
+    assert g_primary_column_name
 
-assert g_primary_column_name
+    g_all_classes = body['sequence']
 
-with open('sequence.json') as f:
-    g_all_classes = json.load(f)
-
-with open('searchable.json') as f:
-    g_searchable_classes = json.load(f)
+    g_searchable_classes = body['searchable']
+    print(g_searchable_classes)

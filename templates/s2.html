@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}script{% endblock %}
+
+{% block customer_head%}
+<script type="text/javascript" src="/static/js/jquery-latest.js"></script>
+<script type="text/javascript" src="/static/js/highcharts.js"></script>
+<script>
+$(function () {
+$('#container').highcharts({
+chart: {
+type: 'pie'
+},
+title: {
+text: 'Fruit Consumption'
+},
+yAxis: {
+title: {
+text: 'Fruit eaten'
+}
+},
+series: [{
+data: [{
+name: 'apple',
+y: 10
+},{
+name: 'orange',
+y: 50
+},{
+name: 'bnana',
+y: 100
+}]
+}]
+});
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<h1> hello world </h1>
+<p></p>
+<div id="container" style="width:50%; height:50%;"></div>
+<!-- <div id="container"></div> -->
+{% endblock %}
