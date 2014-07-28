@@ -35,31 +35,28 @@ accounts_collection = db[accounts_collection_name]
 scripts_collection = db[scripts_collection_name]
 columns_format_collection = db[columns_format_collection_name]
 class AccountLines():
-    class_dict = column_op.g_class_dict
-    primary_column_name = column_op.g_primary_column_name
-    collection = accounts_collection
     def __init__(self, titles):
         for title in titles:
-            if title not in self.class_dict:
+            if title not in column_op.g_class_dict:
                 raise Exception('invalid column name: %s' % title)
-        if self.primary_column_name not in titles:
-            raise Exception('no primary column: %s' % self.primary_column_name)
+        if column_op.g_primary_column_name not in titles:
+            raise Exception('no primary column: %s' % column_op.g_primary_column_name)
         self.titles = titles
         self.lines = []
     def add_line(self, values):
         column_objs = []
         for title in self.titles:
             value = values.pop(0)
-            column_class = self.class_dict[title]
-            if not value and column_class.get_name() == self.primary_column_name:
-                raise Exception('primary key %s should not be empty' % self.primary_column_name)
+            column_class = column_op.g_class_dict[title]
+            if not value and column_class.get_name() == column_op.g_primary_column_name:
+                raise Exception('primary key %s should not be empty' % column_op.g_primary_column_name)
             elif value or column_class.accept_empty:
                 column_obj = column_class(value)
                 column_objs.append(column_obj)
         self.lines.append(column_objs)
     def _insert(self, keypairs):
         logging.debug('insert: %s' % keypairs)
-        ret = self.collection.insert(keypairs)
+        ret = accounts_collection.insert(keypairs)
         logging.debug('insert result: %s' % ret)
     def create_account(self):
         for column_objs in self.lines:
@@ -73,7 +70,7 @@ class AccountLines():
             self._insert(keypairs)
     def _update(self, primary, keypairs):
         logging.debug('update: %s %s' % (primary, keypairs))
-        ret = self.collection.update(primary, {'$set': keypairs})
+        ret = accounts_collection.update(primary, {'$set': keypairs})
         logging.debug('update result: %s' % ret)
     def update_account(self):
         for column_objs in self.lines:
@@ -90,7 +87,7 @@ class AccountLines():
             self._update(primary, keypairs)
     def _delete(self, primary):
         logging.debug('delete: %s' % primary)
-        ret = self.collection.remove(primary)
+        ret = accounts_collection.remove(primary)
         logging.debug('delete result: %s' % ret)
     def delete_account(self):
         primary = None
