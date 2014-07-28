@@ -1,10 +1,18 @@
 #! /usr/bin/env python
 
+import os
 import time
 import yaml
 import json
 import logging
 from new import classobj
+
+current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
+with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
+    conf = yaml.safe_load(f)
+
+timezone = conf['timezone']
+timezone_seconds = timezone * 3600
 
 class BasicColumn():
     accept_empty = False
@@ -247,6 +255,7 @@ class TimeEventColumn(BasicColumn):
     export_type = 'time_event'
     time_fmt = '%Y-%m-%d'
     checked_values = ('Yes', 'No')
+    warning_time = 3600 * 24
     @classmethod
     def get_search_op(cls):
         raise Exception('not support')
@@ -261,7 +270,15 @@ class TimeEventColumn(BasicColumn):
         return '%s/%s' % (timestr, checked)
     @classmethod
     def get_html_string(cls, value):
-        return cls.get_csv_string(value)
+        checked = value['checked']
+        epoch = value['epoch']
+        timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
+        curr_time = int(time.time()) + timezone_seconds
+        if epoch - curr_time < cls.warning_time and checked != 'Yes':
+            ret = '<font color="#FF0000">%s/%s</font>' % (timestr, checked)
+        else:
+            ret = '%s/%s' % (timestr, checked)
+        return ret
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
@@ -418,6 +435,4 @@ def generate_columns_profile(body):
     assert g_primary_column_name
 
     g_all_classes = body['sequence']
-
     g_searchable_classes = body['searchable']
-    print(g_searchable_classes)
