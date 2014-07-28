@@ -1,0 +1,58 @@
+#! /usr/bin/awk -f
+
+{
+    if ($IPRecord != _empty)
+        ip_records[$AccountManager] += 1
+    if ($ICPRecord != _empty)
+	icp_records[$AccountManager] += 1
+    if ($OpenIssues != _empty)
+	open_issueses[$AccountManager] += 1
+    if ($InternetTrafficRequired == "Yes")
+	internet_traffic_requireds[$AccountManager] += 1
+    if ($Exception == "Yes")
+	exceptions[$AccountManager] += 1
+    if ($ExceptionApproved == "Yes")
+	exception_approveds[$AccountManager] += 1
+    if (match($KickoffMeeting, /Yes/))
+	kickoff_meetings[$AccountManager] += 1
+    account_managers[$AccountManager] += 1
+}
+
+END {
+    for (account_manager in account_managers) {
+    	printf("graph_name: %s\n", account_manager)
+        printf("graph_type: bar\n")
+        printf("IPRecord: %d\n", ip_records[account_manager])
+	printf("ICPRecord: %d\n", icp_records[account_manager])
+	printf("OpenIssues: %d\n", open_issueses[account_manager])
+	printf("InternetTrafficRequired: %d\n", internet_traffic_requireds[account_manager])
+	printf("Exception: %d\n", exceptions[account_manager])
+	printf("ExceptionApproved: %d\n", exception_approveds[account_manager])
+	printf("KickoffMeeting: %d\n", kickoff_meetings[account_manager])
+	printf("total: %d\n", account_managers[account_manager])
+	total_ip_records += ip_records[account_manager]
+	total_icp_records += icp_records[account_manager]
+	total_open_issueses += open_issueses[account_manager]
+	total_internet_traffic_requireds += internet_traffic_requireds[account_manager]
+	total_exceptions += exceptions[account_manager]
+	total_exception_approveds += exception_approveds[account_manager]
+	total_kickoff_meetings += kickoff_meetings[account_manager]
+	total_accounts += account_managers[account_manager]
+    }
+    printf("graph_name: aws\n")
+    printf("graph_type: bar\n")
+    printf("IPRecord: %d\n", total_ip_records)
+    printf("ICPRecord: %d\n", total_icp_records)
+    printf("OpenIssues: %d\n", total_open_issueses)
+    printf("InternetTrafficRequired: %d\n", total_internet_traffic_requireds)
+    printf("Exception: %d\n", total_exceptions)
+    printf("ExceptionApproved: %d\n", total_exception_approveds)
+    printf("KickoffMeeting: %d\n", total_kickoff_meetings)
+    printf("total: %d\n", total_accounts)
+
+    printf("graph_name: total_accounts\n")
+    printf("graph_type: pie\n")
+    for (account_manager in account_managers) {
+	printf("%s: %d\n", account_manager, account_managers[account_manager])
+    }
+}
