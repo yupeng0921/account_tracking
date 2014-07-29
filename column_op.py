@@ -330,8 +330,8 @@ class MultiLineStringColumn(BasicColumn):
         raise Exception('not support')
     @classmethod
     def get_csv_string(cls, value):
-        value = value.replace('<newline>', '\\n')
-        value = value.replace('<comma>', ',')
+        value = value.replace('\n', '<newline>')
+        value = value.replace(',', '<comma>')
         return value
     @classmethod
     def get_html_string(cls, value):
