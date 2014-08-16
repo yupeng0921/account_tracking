@@ -96,7 +96,7 @@ def login():
             logging.info(registeredUser.password)
         if registeredUser != None and unicode(registeredUser.password) == unicode(password):
             login_user(registeredUser)
-            return redirect(url_for('index'))
+            return redirect(request.args.get("next") or url_for("index"))
         else:
             logging.warning('invalide username or password: %s %s' % (username, password))
             return abort(401)
