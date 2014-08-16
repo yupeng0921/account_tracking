@@ -261,6 +261,7 @@ def edit_item(primary_key):
             else:
                 logging.error('invalid column: %s' % unicode(column))
                 abort(500)
+        write_log(current_user.username, make_timestamp(),'edit', json.dumps(columns))
         set_columns(columns)
         return redirect(url_for('edit_item', primary_key=primary_key))
     columns = get_columns(primary_key)
