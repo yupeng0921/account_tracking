@@ -40,7 +40,7 @@ class AccountLines():
         self.class_dict = get_class_dict()
         self.primary_column_name = get_primary_column_name()
         for title in titles:
-            if title not in class_dict:
+            if title not in self.class_dict:
                 raise Exception('invalid column name: %s, %s' % (title, self.class_dict))
         if self.primary_column_name not in titles:
             raise Exception('no primary column: %s' % self.primary_column_name)
@@ -53,7 +53,7 @@ class AccountLines():
             column_class = self.class_dict[title]
             if not value and column_class.get_name() == self.primary_column_name:
                 raise Exception('primary key %s should not be empty' % self.primary_column_name)
-            elif value or column_class.accept_empty:
+            else:
                 column_obj = column_class(value)
                 column_objs.append(column_obj)
         self.lines.append(column_objs)
@@ -287,15 +287,13 @@ def set_columns(columns):
     keypairs = {}
     condition = None
     for column in columns:
-        if 'value' not in column:
-            continue
         name = column['name']
         class_type = class_dict[name]
         value = class_type.get_value_by_column(column)
         if name == primary_column_name:
             condition = {'_id': value}
         else:
-            keypairs.update({name:value})
+            keypairs.update({name: value})
     assert condition
     accounts_collection.update(condition, {'$set': keypairs})
 
@@ -335,7 +333,6 @@ def do_update_columns_format():
             search_op.append(op)
 
 def get_search_op():
-    print('search_op: %s' % search_op)
     return search_op
 
 def update_columns_format(columns_format_filename):

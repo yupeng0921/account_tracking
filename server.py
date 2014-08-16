@@ -227,21 +227,17 @@ def edit_item(primary_key):
                 column['value'] = value
             elif column['type'] == 'boolean':
                 value = request.form['%s_boolean' % name]
-                if value == 'not set':
-                    continue
                 column['value'] = value
             elif column['type'] == 'time':
                 value = request.form['%s_time' % name]
-                if not value:
-                    continue
                 column['value'] = value
             elif column['type'] == 'time_event':
-                option = request.form['%s_time_event_option' % name]
-                if option == 'not set':
-                    continue
-                checked = option
+                checked = request.form['%s_time_event_option' % name]
                 timestr = request.form['%s_time_event_date' % name]
-                column['value'] = '%s/%s' % (timestr, checked)
+                if checked and timestr:
+                    column['value'] = '%s/%s' % (timestr, checked)
+                else:
+                    column['value'] = ''
             elif column['type'] == 'textarea':
                 value = request.form['%s_textarea' % name]
                 column['value'] = value

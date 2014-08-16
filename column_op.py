@@ -157,8 +157,8 @@ class StringColumn(BasicColumn):
 
 class BooleanColumn(BasicColumn):
     export_type = 'boolean'
-    true_values = ('True', 'Yes', 'yes', 'Y', 'y')
-    false_values = ('False', 'No', 'no', 'N', 'n')
+    true_values = ('True', 'YES', 'Yes', 'yes', 'Y', 'y')
+    false_values = ('False', 'NO', 'No', 'no', 'N', 'n')
     true_in_db = 'Yes'
     false_in_db = 'No'
     @classmethod
@@ -194,7 +194,9 @@ class BooleanColumn(BasicColumn):
         return cls.__name__
     @classmethod
     def _get_value_from_input(cls, inp):
-        if inp in cls.true_values:
+        if not inp:
+            return ''
+        elif inp in cls.true_values:
             return cls.true_in_db
         elif inp in cls.false_values:
             return cls.false_in_db
@@ -218,7 +220,10 @@ class TimeColumn(BasicColumn):
         raise Exception('not support')
     @classmethod
     def get_csv_string(cls, value):
-        return time.strftime(cls.time_fmt, time.gmtime(value))
+        if value:
+            return time.strftime(cls.time_fmt, time.gmtime(value))
+        else:
+            return ''
     @classmethod
     def get_html_string(cls, value):
         return cls.get_csv_string(value)
@@ -228,7 +233,7 @@ class TimeColumn(BasicColumn):
         if value:
             column['value'] = time.strftime(cls.time_fmt, time.gmtime(value))
         else:
-            column['value'] = None
+            column['value'] = ''
         return column
     @classmethod
     def get_column_skeleton(cls):
@@ -241,9 +246,13 @@ class TimeColumn(BasicColumn):
         return cls._get_value_by_input(column['value'].strip())
     @classmethod
     def _get_value_by_input(cls, inp):
-        epoch = time.mktime(time.strptime(inp, cls.time_fmt))
-        epoch = int(epoch)
-        return epoch
+        if inp:
+            inp = inp.replace('/', '-')
+            epoch = time.mktime(time.strptime(inp, cls.time_fmt))
+            epoch = int(epoch)
+            return epoch
+        else:
+            return 0
     @classmethod
     def get_name(cls):
         return cls.__name__
@@ -267,25 +276,31 @@ class TimeEventColumn(BasicColumn):
     def get_csv_string(cls, value):
         checked = value['checked']
         epoch = value['epoch']
-        timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
-        return '%s/%s' % (timestr, checked)
+        if epoch:
+            timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
+            return '%s/%s' % (timestr, checked)
+        else:
+            return ''
     @classmethod
     def get_html_string(cls, value):
         checked = value['checked']
         epoch = value['epoch']
-        timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
-        curr_time = int(time.time()) + timezone_seconds
-        if epoch - curr_time < cls.warning_time and checked != 'Yes':
-            ret = '<font color="#FF0000">%s/%s</font>' % (timestr, checked)
+        if epoch:
+            timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
+            curr_time = int(time.time()) + timezone_seconds
+            if epoch - curr_time < cls.warning_time and checked != 'Yes':
+                ret = '<font color="#FF0000">%s/%s</font>' % (timestr, checked)
+            else:
+                ret = '%s/%s' % (timestr, checked)
+            return ret
         else:
-            ret = '%s/%s' % (timestr, checked)
-        return ret
+            return ''
     @classmethod
     def get_column_by_value(cls, value):
         column = cls.get_column_skeleton()
-        if value:
-            column['checked'] = value['checked']
-            epoch = value['epoch']
+        column['checked'] = value['checked']
+        epoch = value['epoch']
+        if epoch:
             timestr = time.strftime(cls.time_fmt, time.gmtime(epoch))
             column['timestr'] = timestr
         else:
@@ -303,15 +318,20 @@ class TimeEventColumn(BasicColumn):
         return cls._get_value_by_input(column['value'].strip())
     @classmethod
     def _get_value_by_input(cls, inp):
-        timestr, checked = inp.split('/')
-        epoch = time.mktime(time.strptime(timestr, cls.time_fmt))
-        epoch = int(epoch)
-        ret = {}
-        if checked not in cls.checked_values:
-            raise Exception('invalid checked value: %s' % checked)
-        ret['checked'] = checked
-        ret['epoch'] = epoch
-        return ret
+        if inp:
+            timestr, checked = inp.split('/')
+            epoch = time.mktime(time.strptime(timestr, cls.time_fmt))
+            epoch = int(epoch)
+            ret = {}
+            if checked not in cls.checked_values:
+                raise Exception('invalid checked value: %s' % checked)
+            ret['checked'] = checked
+            ret['epoch'] = epoch
+            return ret
+        else:
+            ret['checked'] = ''
+            ret['epoch'] = 0
+            return ret
     @classmethod
     def get_name(cls):
         return cls.__name__
@@ -331,8 +351,6 @@ class MultiLineStringColumn(BasicColumn):
         raise Exception('not support')
     @classmethod
     def get_csv_string(cls, value):
-        value = value.replace('\n', '<newline>')
-        value = value.replace(',', '<comma>')
         return value
     @classmethod
     def get_html_string(cls, value):
@@ -362,8 +380,6 @@ class MultiLineStringColumn(BasicColumn):
     def get_name(cls):
         return cls.__name__
     def __init__(self, inp):
-        inp = inp.replace('<newline>', '\n')
-        inp = inp.replace('<comma>', ',')
         self.value = inp
     def get_value(self):
         return self.value
@@ -439,7 +455,6 @@ def generate_columns_profile(body):
 
     g_all_classes = body['sequence']
     g_searchable_classes = body['searchable']
-    print('g_searchable_classes 1: %s' % g_searchable_classes)
 
 def get_class_dict():
     return g_class_dict
@@ -451,5 +466,4 @@ def get_all_classes():
     return g_all_classes
 
 def get_searchable_classes():
-    print('g_searchable_classes 2: %s' % g_searchable_classes)
     return g_searchable_classes
