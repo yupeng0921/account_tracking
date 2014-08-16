@@ -41,12 +41,15 @@ class BasicColumn():
         :type value: string or dict or list
         :param value: value stored in mongodb
 
+        :type escape: boolean
+        :param escape: ues <COMMA> escape ',' and use <NEWLINE> escape '\n' if True
+
         :rtype: string
         :return: can be suitable shown in format html
         """
         raise Exception('child should overwrite it')
     @classmethod
-    def get_csv_string(cls, value):
+    def get_csv_string(cls, value, escape=False):
         """
         :type value: string or dict or list
         :param value: data stored in mongodb
@@ -121,7 +124,9 @@ class StringColumn(BasicColumn):
         elif option == 'include':
             return {'$regex': text}
     @classmethod
-    def get_csv_string(cls, value):
+    def get_csv_string(cls, value, escape=False):
+        if escape:
+            value = value.replace(',', '<COMMA>').replace('\n', '<NEWLINE>')
         return value
     @classmethod
     def get_html_string(cls, value):
@@ -173,7 +178,7 @@ class BooleanColumn(BasicColumn):
     def get_search_value(cls, inp):
         raise Exception('not support')
     @classmethod
-    def get_csv_string(cls, value):
+    def get_csv_string(cls, value, escape=False):
         return value
     @classmethod
     def get_html_string(cls, value):
@@ -224,7 +229,7 @@ class TimeColumn(BasicColumn):
     def get_search_value(cls, inp):
         raise Exception('not support')
     @classmethod
-    def get_csv_string(cls, value):
+    def get_csv_string(cls, value, escape=False):
         if value:
             return time.strftime(cls.time_fmt, time.gmtime(value))
         else:
@@ -276,7 +281,9 @@ class MultiLineStringColumn(BasicColumn):
     def get_search_vaue(cls, inp):
         raise Exception('not support')
     @classmethod
-    def get_csv_string(cls, value):
+    def get_csv_string(cls, value, escape=False):
+        if escape:
+            value = value.replace(',', '<COMMA>').replace('\n', '<NEWLINE>')
         return value
     @classmethod
     def get_html_string(cls, value):

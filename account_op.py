@@ -197,8 +197,7 @@ def do_search_and_run_script(params, script_name):
             if name == primary_column_name:
                 name = '_id'
             if name in item:
-                csv_string = class_type.get_csv_string(\
-                    item[name])
+                csv_string = class_type.get_csv_string(item[name], escape=True)
             else:
                 csv_string = default_csv_string
             csv_columns.append(csv_string)
