@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import os
+import time
 import yaml
 import json
 import zipfile
@@ -15,6 +16,8 @@ from flask.ext.login import LoginManager , login_required , UserMixin , login_us
 from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
     get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
 
+from action_log import write_log
+
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
     conf = yaml.safe_load(f)
@@ -24,12 +27,23 @@ mongodb_port = conf['mongodb_port']
 db_name = conf['db_name']
 server_log_file = conf['server_log_file']
 login_file = conf['login_file']
+timezone = conf['timezone']
+timezone_seconds = timezone * 3600
 
 upload_folder = 'upload'
 
 format = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
 datefmt='%Y-%m-%d %H:%M:%S'
 logging.basicConfig(filename=server_log_file, level=logging.DEBUG, format=format, datefmt=datefmt)
+
+def make_timestamp():
+    time_fmt = '%Y-%m-%dT%H:%M:%S'
+    if timezone >= 0:
+        suffix = 'GMT+%02d00' % timezone
+    else:
+        suffix = 'GTM+%02d00' % (-timezone)
+    time_fmt = '%s%s' % (time_fmt, suffix)
+    return time.strftime(time_fmt, time.gmtime(time.time()+timezone_seconds))
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -163,6 +177,7 @@ def upload():
         upload_file.save(upload_filename)
         action = request.form['actionsRadios']
         try:
+            write_log(current_user.username, make_timestamp(), action, upload_filename)
             do_upload(action, upload_filename)
         except Exception, e:
             os.remove(upload_filename)

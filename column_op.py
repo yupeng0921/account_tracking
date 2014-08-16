@@ -5,7 +5,6 @@ import time
 import yaml
 import json
 import logging
-import copy
 from new import classobj
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
