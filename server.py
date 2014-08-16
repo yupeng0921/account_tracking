@@ -262,6 +262,8 @@ def download(params):
 @app.route('/script', methods=['GET', 'POST'])
 @login_required
 def script():
+    if current_user.username != 'admin':
+        return abort(403)
     if request.method == 'POST':
         action = request.args.get('action')
         if action == 'upload':
@@ -289,12 +291,16 @@ def script():
 @app.route('/script/<script_name>')
 @login_required
 def get_script_body(script_name):
+    if current_user.username != 'admin':
+        return abort(403)
     body = get_script_body_by_name(script_name)
     return render_template('script_body.html', body=body, user=current_user)
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
+    if current_user.username != 'admin':
+        return abort(403)
     if request.method == 'POST':
         columns_format_file = request.files['columns_format_file']
         filename = secure_filename(columns_format_file.filename)
