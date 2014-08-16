@@ -227,6 +227,8 @@ def edit_item(primary_key):
                 column['value'] = value
             elif column['type'] == 'boolean':
                 value = request.form['%s_boolean' % name]
+                if value == 'not set':
+                    value = ''
                 column['value'] = value
             elif column['type'] == 'time':
                 value = request.form['%s_time' % name]
