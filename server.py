@@ -132,7 +132,9 @@ def do_upload(action, fullpath):
         try:
             account_lines.add_line(values)
         except Exception, e:
+            msg = traceback.format_exc()
             logging.error(unicode(e))
+            logging.error(msg)
             varify_errors.append(line_number)
     if varify_errors:
         msg = 'varify failed: %s' % varify_errors

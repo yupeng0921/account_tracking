@@ -199,7 +199,7 @@ class BooleanColumn(BasicColumn):
             return cls.false_in_db
         else:
             raise Exception('invalid value for %s: %s' % \
-                                (cls.__name__, value))
+                                (cls.__name__, inp))
     def __init__(self, inp):
         self._get_value_from_input(inp)
         self.value = inp
@@ -357,6 +357,9 @@ class MultiLineStringColumn(BasicColumn):
     def get_value_by_column(cls, column):
         value = column['value']
         return value
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
     def __init__(self, inp):
         inp = inp.replace('<newline>', '\n')
         inp = inp.replace('<comma>', ',')

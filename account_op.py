@@ -38,7 +38,7 @@ class AccountLines():
     def __init__(self, titles):
         for title in titles:
             if title not in column_op.g_class_dict:
-                raise Exception('invalid column name: %s' % title)
+                raise Exception('invalid column name: %s, %s' % (title, column_op.g_class_dict))
         if column_op.g_primary_column_name not in titles:
             raise Exception('no primary column: %s' % column_op.g_primary_column_name)
         self.titles = titles
@@ -143,7 +143,7 @@ def generate_csv(params):
         if name == column_op.g_primary_column_name:
             name = '_id'
         if value:
-            keyparis.update({name: value})
+            keypairs.update({name: value})
     items = accounts_collection.find(keypairs)
     lines = []
     line = default_csv_delimiter.join(column_op.g_all_classes)
