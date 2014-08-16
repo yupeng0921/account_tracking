@@ -9,7 +9,8 @@ from tempfile import TemporaryFile
 from subprocess import Popen, PIPE, STDOUT
 from pymongo import MongoClient
 # from column_op import g_class_dict, g_all_classes, g_searchable_classes, g_primary_column_name, generate_columns_profile
-import column_op
+# import column_op
+from column_op import get_class_dict, get_all_classes, get_searchable_classes, get_primary_column_name, generate_columns_profile
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -36,20 +37,22 @@ scripts_collection = db[scripts_collection_name]
 columns_format_collection = db[columns_format_collection_name]
 class AccountLines():
     def __init__(self, titles):
+        self.class_dict = get_class_dict()
+        self.primary_column_name = get_primary_column_name()
         for title in titles:
-            if title not in column_op.g_class_dict:
-                raise Exception('invalid column name: %s, %s' % (title, column_op.g_class_dict))
-        if column_op.g_primary_column_name not in titles:
-            raise Exception('no primary column: %s' % column_op.g_primary_column_name)
+            if title not in class_dict:
+                raise Exception('invalid column name: %s, %s' % (title, self.class_dict))
+        if self.primary_column_name not in titles:
+            raise Exception('no primary column: %s' % self.primary_column_name)
         self.titles = titles
         self.lines = []
     def add_line(self, values):
         column_objs = []
         for title in self.titles:
             value = values.pop(0)
-            column_class = column_op.g_class_dict[title]
-            if not value and column_class.get_name() == column_op.g_primary_column_name:
-                raise Exception('primary key %s should not be empty' % column_op.g_primary_column_name)
+            column_class = self.class_dict[title]
+            if not value and column_class.get_name() == self.primary_column_name:
+                raise Exception('primary key %s should not be empty' % self.primary_column_name)
             elif value or column_class.accept_empty:
                 column_obj = column_class(value)
                 column_objs.append(column_obj)
@@ -64,7 +67,7 @@ class AccountLines():
             for column_obj in column_objs:
                 value = column_obj.get_value()
                 name = column_obj.get_name()
-                if name == column_op.g_primary_column_name:
+                if name == self.primary_column_name:
                     name = '_id'
                 keypairs.update({name: value})
             self._insert(keypairs)
@@ -79,7 +82,7 @@ class AccountLines():
             for column_obj in column_objs:
                 name = column_obj.get_name()
                 value = column_obj.get_value()
-                if name == column_op.g_primary_column_name:
+                if name == self.primary_column_name:
                     primary = {'_id': value}
                 else:
                     keypairs.update({name: value})
@@ -94,7 +97,7 @@ class AccountLines():
         for column_objs in self.lines:
             for column_obj in column_objs:
                 name = column_obj.get_name()
-                if name == column_op.g_primary_column_name:
+                if name == self.primary_column_name:
                     value = column_obj.get_value()
                     primary = {'_id': value}
                     break
@@ -103,14 +106,17 @@ class AccountLines():
 
 search_op = []
 def do_search(params):
+    all_classes = get_all_classes()
+    class_dict = get_class_dict()
+    primary_column_name = get_primary_column_name()
     result = {}
-    result['titles'] = column_op.g_all_classes
+    result['titles'] = all_classes
     keypairs = {}
     for param in params:
         name = param['name']
-        class_type = column_op.g_class_dict[name]
+        class_type = class_dict[name]
         value = class_type.get_search_value(param)
-        if name == column_op.g_primary_column_name:
+        if name == primary_column_name:
             name = '_id'
         if value:
             keypairs.update({name: value})
@@ -119,9 +125,9 @@ def do_search(params):
     for item in items:
         columns = []
         primary_key = item['_id']
-        for name in column_op.g_all_classes:
-            class_type = column_op.g_class_dict[name]
-            if name == column_op.g_primary_column_name:
+        for name in all_classes:
+            class_type = class_dict[name]
+            if name == primary_column_name:
                 name = '_id'
             if name in item:
                 html_string = class_type.get_html_string(\
@@ -135,25 +141,28 @@ def do_search(params):
     return result
 
 def generate_csv(params):
+    class_dict = get_class_dict()
+    primary_column_name = get_primary_column_name()
+    all_classes = get_all_classes()
     keypairs = {}
     for param in params:
         name = param['name']
-        class_type = column_op.g_class_dict[name]
+        class_type = class_dict[name]
         value = class_type.get_search_value(param)
-        if name == column_op.g_primary_column_name:
+        if name == primary_column_name:
             name = '_id'
         if value:
             keypairs.update({name: value})
     items = accounts_collection.find(keypairs)
     lines = []
-    line = default_csv_delimiter.join(column_op.g_all_classes)
+    line = default_csv_delimiter.join(all_classes)
     lines.append(line)
     for item in items:
         csv_columns =[]
         primary_key = item['_id']
-        for name in column_op.g_all_classes:
-            class_type = column_op.g_class_dict[name]
-            if name == column_op.g_primary_column_name:
+        for name in all_classes:
+            class_type = class_dict[name]
+            if name == primary_column_name:
                 name = '_id'
             if name in item:
                 csv_string = class_type.get_csv_string(item[name])
@@ -166,12 +175,15 @@ def generate_csv(params):
     return lines
 
 def do_search_and_run_script(params, script_name):
+    class_dict = get_class_dict()
+    primary_column_name = get_primary_column_name()
+    all_classes = get_all_classes()
     keypairs = {}
     for param in params:
         name = param['name']
-        class_type = column_op.g_class_dict[name]
+        class_type = class_dict[name]
         value = class_type.get_search_value(param)
-        if name == column_op.g_primary_column_name:
+        if name == primary_column_name:
             name = '_id'
         if value:
             keypairs.update({name: value})
@@ -180,9 +192,9 @@ def do_search_and_run_script(params, script_name):
     for item in items:
         primary_key = item['_id']
         csv_columns = []
-        for name in column_op.g_all_classes:
-            class_type = column_op.g_class_dict[name]
-            if name == column_op.g_primary_column_name:
+        for name in all_classes:
+            class_type = class_dict[name]
+            if name == primary_column_name:
                 name = '_id'
             if name in item:
                 csv_string = class_type.get_csv_string(\
@@ -201,7 +213,7 @@ def do_search_and_run_script(params, script_name):
     args = "awk -F '%s' -v _empty=%s -f %s" % \
         (default_csv_delimiter, default_csv_string, awk_filename)
     index = 1
-    for name in column_op.g_all_classes:
+    for name in all_classes:
         v = '-v %s=%d' % (name, index)
         args = "%s %s" % (args, v)
         index += 1
@@ -234,7 +246,7 @@ def do_search_and_run_script(params, script_name):
         assert graph_type_key in graph
         graphs.append(graph)
     return graphs
-                
+
 def get_columns(primary_key=None):
     if not primary_key:
         return get_columns_skeleton()
@@ -242,11 +254,14 @@ def get_columns(primary_key=None):
         return get_columns_by_key(primary_key)
 
 def get_columns_by_key(primary_key):
+    all_classes = get_all_classes()
+    primary_column_name = get_primary_column_name()
+    class_dict = get_class_dict()
     columns = []
     item = accounts_collection.find_one({'_id': primary_key})
-    for name in column_op.g_all_classes:
-        class_type = column_op.g_class_dict[name]
-        if name == column_op.g_primary_column_name:
+    for name in all_classes:
+        class_type = class_dict[name]
+        if name == primary_column_name:
             value = item['_id']
         elif name in item:
             value = item[name]
@@ -257,23 +272,27 @@ def get_columns_by_key(primary_key):
     return columns
 
 def get_columns_skeleton():
+    all_classes = get_all_classes()
+    class_dict = get_class_dict()
     columns = []
-    for name in column_op.g_all_classes:
-        class_type = column_op.g_class_dict[name]
+    for name in all_classes:
+        class_type = class_dict[name]
         column = class_type.get_column_skeleton()
         columns.append(column)
     return columns
 
 def set_columns(columns):
+    class_dict = get_class_dict()
+    primary_column_name = get_primary_column_name()
     keypairs = {}
     condition = None
     for column in columns:
         if 'value' not in column:
             continue
         name = column['name']
-        class_type = column_op.g_class_dict[name]
+        class_type = class_dict[name]
         value = class_type.get_value_by_column(column)
-        if name == column_op.g_primary_column_name:
+        if name == primary_column_name:
             condition = {'_id': value}
         else:
             keypairs.update({name:value})
@@ -302,14 +321,22 @@ def get_script_body_by_name(script_name):
     return ret['body']
 
 def do_update_columns_format():
+    global search_op
+    search_op = []
+    class_dict = get_class_dict()
     item = columns_format_collection.find_one({'_id': columns_format_key})
     if item:
         body = item['body']
-        column_op.generate_columns_profile(body)
-        for class_name in column_op.g_searchable_classes:
-            class_type = column_op.g_class_dict[class_name]
+        generate_columns_profile(body)
+        searchable_class = get_searchable_classes()
+        for class_name in searchable_class:
+            class_type = class_dict[class_name]
             op = class_type.get_search_op()
             search_op.append(op)
+
+def get_search_op():
+    print('search_op: %s' % search_op)
+    return search_op
 
 def update_columns_format(columns_format_filename):
     with open(columns_format_filename, 'r') as f:

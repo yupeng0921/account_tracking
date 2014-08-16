@@ -5,6 +5,7 @@ import time
 import yaml
 import json
 import logging
+import copy
 from new import classobj
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
@@ -433,9 +434,22 @@ def generate_columns_profile(body):
             raise Exception('unsupport type: %s %s' % (name, t))
         g_class_dict[name] = cls
         if 'IsPrimary' in p:
-            assert not g_primary_column_name
             g_primary_column_name = name
     assert g_primary_column_name
 
     g_all_classes = body['sequence']
     g_searchable_classes = body['searchable']
+    print('g_searchable_classes 1: %s' % g_searchable_classes)
+
+def get_class_dict():
+    return g_class_dict
+
+def get_primary_column_name():
+    return g_primary_column_name
+
+def get_all_classes():
+    return g_all_classes
+
+def get_searchable_classes():
+    print('g_searchable_classes 2: %s' % g_searchable_classes)
+    return g_searchable_classes

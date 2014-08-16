@@ -6,12 +6,13 @@ import json
 import zipfile
 import logging
 import traceback
+import csv
 from uuid import uuid4
 from flask import Flask, request, redirect, url_for, render_template, abort, Response, make_response
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user, current_user
 
-from account_op import search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
+from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
     get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
@@ -116,7 +117,8 @@ def logout():
 
 def do_upload(action, fullpath):
     f = open(fullpath, 'r')
-    titles = f.next().split(',')
+    csv_reader = csv.reader(f)
+    titles = csv_reader.next()
     titles = [title.strip() for title in titles]
     try:
         account_lines = AccountLines(titles)
@@ -125,10 +127,12 @@ def do_upload(action, fullpath):
         raise Exception(msg)
     varify_errors = []
     line_number = 1
-    for eachline in f:
+    for values in csv_reader:
         line_number += 1
-        values = eachline.split(',')
         values = [value.strip() for value in values]
+        if action == 'delete' and len(values) != 1:
+            logging.error('%d has more than one columns: %s' % (line_number, values))
+            varify_errors.append(line_number)
         try:
             account_lines.add_line(values)
         except Exception, e:
@@ -139,13 +143,14 @@ def do_upload(action, fullpath):
     if varify_errors:
         msg = 'varify failed: %s' % varify_errors
         raise Exception(msg)
-    action_error = None
     if action == 'create':
         account_lines.create_account()
     elif action == 'update':
         account_lines.update_account()
     elif action == 'delete':
         account_lines.delete_account()
+    else:
+        raise Exception('unsupport action %s' % action)
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -170,6 +175,7 @@ def upload():
 @app.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
+    search_op = get_search_op()
     if request.method == 'POST':
         params = []
         for item in search_op:
