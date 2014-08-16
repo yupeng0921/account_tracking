@@ -110,11 +110,16 @@ class StringColumn(BasicColumn):
         op = {}
         op['name'] = cls.__name__
         op['type'] = cls.export_type
-        op['options'] = ['equal']
+        op['options'] = ['equal', 'include']
         return op
     @classmethod
     def get_search_value(cls, inp):
-        return inp['text'].strip()
+        option = inp['option'].strip()
+        text = inp['text'].strip()
+        if option == 'equal':
+            return text
+        elif option == 'include':
+            return {'$regex': text}
     @classmethod
     def get_csv_string(cls, value):
         return value
