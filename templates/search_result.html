@@ -19,7 +19,7 @@
   </tr>
   {% for line in result.lines %}
   <tr>
-	<td> <a href="/edit/{{line.primary_key}}"> link </a> </td>
+	<td> <a href="/edit/{{line.primary_key}}"> edit </a> </td>
 	{% for column in line.columns %}
 	{% if column.color == "red" %}
 	<td class="danger"> {{column.html_string|safe}} </td>
