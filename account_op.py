@@ -29,12 +29,33 @@ graph_type_key = conf['graph_type_key']
 graph_members_key = conf['graph_members_key']
 columns_format_collection_name = conf['columns_format_collection_name']
 columns_format_key = conf['columns_format_key']
+timezone = conf['timezone']
+timezone_seconds = timezone * 3600
 
 client = MongoClient(mongodb_addr, mongodb_port)
 db = client[db_name]
 accounts_collection = db[accounts_collection_name]
 scripts_collection = db[scripts_collection_name]
 columns_format_collection = db[columns_format_collection_name]
+
+def make_timestamp():
+    time_fmt = '%Y-%m-%dT%H:%M:%S'
+    if timezone >= 0:
+        suffix = 'GMT+%02d00' % timezone
+    else:
+        suffix = 'GTM+%02d00' % (-timezone)
+    time_fmt = '%s%s' % (time_fmt, suffix)
+    return time.strftime(time_fmt, time.gmtime(time.time()+timezone_seconds))
+
+def write_log(name, action, body):
+    return
+    timestamp = int(time.time())
+    log_collection = db[name]
+    log_document = {'_id': timestamp,
+                    'action': action,
+                    'body': body}
+    log_collection.insert(log_document)
+
 class AccountLines():
     def __init__(self, titles):
         self.class_dict = get_class_dict()
@@ -59,8 +80,8 @@ class AccountLines():
         self.lines.append(column_objs)
     def _insert(self, keypairs):
         logging.debug('insert: %s' % keypairs)
+        write_log(keypairs['_id'], 'insert', keypairs)
         ret = accounts_collection.insert(keypairs)
-        logging.debug('insert result: %s' % ret)
     def create_account(self):
         for column_objs in self.lines:
             keypairs = {}
@@ -73,8 +94,8 @@ class AccountLines():
             self._insert(keypairs)
     def _update(self, primary, keypairs):
         logging.debug('update: %s %s' % (primary, keypairs))
+        write_log(primary['_id'], 'update', keypairs)
         ret = accounts_collection.update(primary, {'$set': keypairs})
-        logging.debug('update result: %s' % ret)
     def update_account(self):
         for column_objs in self.lines:
             keypairs = {}
@@ -90,8 +111,8 @@ class AccountLines():
             self._update(primary, keypairs)
     def _delete(self, primary):
         logging.debug('delete: %s' % primary)
+        write_log(primary['_id'], 'delete', primary)
         ret = accounts_collection.remove(primary)
-        logging.debug('delete result: %s' % ret)
     def delete_account(self):
         primary = None
         for column_objs in self.lines:
@@ -294,7 +315,8 @@ def set_columns(columns):
         else:
             keypairs.update({name: value})
     assert condition
-    accounts_collection.update(condition, {'$set': keypairs})
+    write_log(condition['_id'], 'edit', keypairs)
+    accounts_collection.update(condition, keypairs)
 
 def get_scripts():
     items = scripts_collection.find()

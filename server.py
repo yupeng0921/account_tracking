@@ -25,23 +25,12 @@ mongodb_port = conf['mongodb_port']
 db_name = conf['db_name']
 server_log_file = conf['server_log_file']
 login_file = conf['login_file']
-timezone = conf['timezone']
-timezone_seconds = timezone * 3600
 
 upload_folder = 'upload'
 
 format = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
 datefmt='%Y-%m-%d %H:%M:%S'
 logging.basicConfig(filename=server_log_file, level=logging.DEBUG, format=format, datefmt=datefmt)
-
-def make_timestamp():
-    time_fmt = '%Y-%m-%dT%H:%M:%S'
-    if timezone >= 0:
-        suffix = 'GMT+%02d00' % timezone
-    else:
-        suffix = 'GTM+%02d00' % (-timezone)
-    time_fmt = '%s%s' % (time_fmt, suffix)
-    return time.strftime(time_fmt, time.gmtime(time.time()+timezone_seconds))
 
 app = Flask(__name__)
 login_manager = LoginManager()
