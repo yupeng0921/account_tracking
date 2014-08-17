@@ -16,8 +16,6 @@ from flask.ext.login import LoginManager , login_required , UserMixin , login_us
 from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
     get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
 
-from action_log import write_log
-
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
     conf = yaml.safe_load(f)
@@ -177,7 +175,6 @@ def upload():
         upload_file.save(upload_filename)
         action = request.form['actionsRadios']
         try:
-            write_log(current_user.username, make_timestamp(), action, upload_filename)
             do_upload(action, upload_filename)
         except Exception, e:
             os.remove(upload_filename)
@@ -261,7 +258,6 @@ def edit_item(primary_key):
             else:
                 logging.error('invalid column: %s' % unicode(column))
                 abort(500)
-        write_log(current_user.username, make_timestamp(),'edit', json.dumps(columns))
         set_columns(columns)
         return redirect(url_for('edit_item', primary_key=primary_key))
     columns = get_columns(primary_key)
