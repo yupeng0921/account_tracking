@@ -123,7 +123,7 @@ def do_upload(action, fullpath):
     titles = csv_reader.next()
     titles = [title.strip() for title in titles]
     try:
-        account_lines = AccountLines(titles)
+        account_lines = AccountLines(titles, int(time.time()), current_user.username)
     except Exception, e:
         msg = '%s failed\n%s' % (action, unicode(e))
         raise Exception(msg)
@@ -248,7 +248,7 @@ def edit_item(primary_key):
             else:
                 logging.error('invalid column: %s' % unicode(column))
                 abort(500)
-        set_columns(columns)
+        set_columns(columns, username=current_user.username, timestamp=int(time.time()))
         return redirect(url_for('edit_item', primary_key=primary_key))
     columns = get_columns(primary_key)
     return render_template('edit.html', columns=columns, user=current_user)

@@ -48,15 +48,16 @@ def make_timestamp(input_time):
     time_fmt = '%s%s' % (time_fmt, suffix)
     return time.strftime(time_fmt, time.gmtime(input_time+timezone_seconds))
 
-def write_log(primary_key, timestamp, action, body):
+def write_log(primary_key, timestamp, username, action, body):
     version_collection = db[primary_key]
     version_document = {'_id': timestamp,
-                    'action': action,
-                    'body': body}
+                        'username': username,
+                        'action': action,
+                        'body': body}
     version_collection.insert(version_document)
 
 class AccountLines():
-    def __init__(self, titles):
+    def __init__(self, titles, timestamp, username):
         self.class_dict = get_class_dict()
         self.primary_column_name = get_primary_column_name()
         for title in titles:
@@ -66,7 +67,8 @@ class AccountLines():
             raise Exception('no primary column: %s' % self.primary_column_name)
         self.titles = titles
         self.lines = []
-        self.timestamp = int(time.time())
+        self.timestamp = timestamp
+        self.username = username
     def add_line(self, values):
         column_objs = []
         for title in self.titles:
@@ -80,7 +82,7 @@ class AccountLines():
         self.lines.append(column_objs)
     def _insert(self, keypairs):
         logging.debug('insert: %s' % keypairs)
-        write_log(keypairs['_id'], self.timestamp, 'insert', keypairs)
+        write_log(keypairs['_id'], self.timestamp, self.username, 'insert', keypairs)
         ret = accounts_collection.insert(keypairs)
     def create_account(self):
         for column_objs in self.lines:
@@ -94,7 +96,7 @@ class AccountLines():
             self._insert(keypairs)
     def _update(self, primary, keypairs):
         logging.debug('update: %s %s' % (primary, keypairs))
-        write_log(primary['_id'], self.timestamp, 'update', keypairs)
+        write_log(primary['_id'], self.timestamp, self.username, 'update', keypairs)
         ret = accounts_collection.update(primary, {'$set': keypairs})
     def update_account(self):
         for column_objs in self.lines:
@@ -111,7 +113,7 @@ class AccountLines():
             self._update(primary, keypairs)
     def _delete(self, primary):
         logging.debug('delete: %s' % primary)
-        write_log(primary['_id'], self.timestamp, 'delete', primary)
+        write_log(primary['_id'], self.timestamp, self.username, 'delete', primary)
         ret = accounts_collection.remove(primary)
     def delete_account(self):
         primary = None
@@ -301,7 +303,7 @@ def get_columns_skeleton():
         columns.append(column)
     return columns
 
-def set_columns(columns):
+def set_columns(columns, username, timestamp):
     class_dict = get_class_dict()
     primary_column_name = get_primary_column_name()
     keypairs = {}
@@ -315,7 +317,7 @@ def set_columns(columns):
         else:
             keypairs.update({name: value})
     assert condition
-    write_log(condition['_id'], int(time.time()), 'edit', keypairs)
+    write_log(condition['_id'], timestamp, username, 'edit', keypairs)
     accounts_collection.update(condition, keypairs)
 
 def get_scripts():
@@ -364,10 +366,10 @@ def get_versions(primary_key, limit, skip):
         version = {}
         version['raw_date'] = item['_id']
         version['date'] = make_timestamp(item['_id'])
+        version['username'] = item['username']
         version['action'] = item['action']
         version['summary'] = json.dumps(item['body'], indent=2).replace('\n', '&#10;').replace('"','')
         versions.append(version)
-    print(versions)
     return versions
 
 def get_version(primary_key, raw_date):
