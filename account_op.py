@@ -370,6 +370,14 @@ def get_versions(primary_key, limit, skip):
     print(versions)
     return versions
 
+def get_version(primary_key, raw_date):
+    version_collection = db[primary_key]
+    version = version_collection.find_one({'_id': int(raw_date)})
+    if version:
+        return json.dumps(version['body'], indent=2).replace('"','')
+    else:
+        return ''
+
 def get_search_op():
     return search_op
 
