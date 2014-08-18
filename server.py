@@ -207,7 +207,7 @@ def search():
 def search_result(params):
     j_params = json.loads(params)
     result = do_search(j_params)
-    return render_template('search_result.html', result=result, params=params, user=current_user)
+    return render_template('search_result.html', result=result, params=params, user=current_user, prev_search=params)
 
 @app.route('/search/<params>/<script>')
 @login_required
@@ -249,7 +249,11 @@ def edit_item(primary_key):
                 logging.error('invalid column: %s' % unicode(column))
                 abort(500)
         set_columns(columns, username=current_user.username, timestamp=int(time.time()))
-        return redirect(url_for('edit_item', primary_key=primary_key))
+        prev_search = request.args.get('prev_search')
+        if prev_search:
+            return redirect(url_for('search_result', params=prev_search))
+        else:
+            return redirect(url_for('edit_item', primary_key=primary_key))
     columns = get_columns(primary_key)
     return render_template('edit.html', columns=columns, user=current_user)
 
