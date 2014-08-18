@@ -1,13 +1,14 @@
 #! /usr/bin/env python
 
 import yaml
+import json
 import logging
 import os
 import time
 from uuid import uuid4
 from tempfile import TemporaryFile
 from subprocess import Popen, PIPE, STDOUT
-from pymongo import MongoClient
+from pymongo import MongoClient, DESCENDING
 # from column_op import g_class_dict, g_all_classes, g_searchable_classes, g_primary_column_name, generate_columns_profile
 # import column_op
 from column_op import get_class_dict, get_all_classes, get_searchable_classes, get_primary_column_name, generate_columns_profile
@@ -38,23 +39,22 @@ accounts_collection = db[accounts_collection_name]
 scripts_collection = db[scripts_collection_name]
 columns_format_collection = db[columns_format_collection_name]
 
-def make_timestamp():
+def make_timestamp(input_time):
     time_fmt = '%Y-%m-%dT%H:%M:%S'
     if timezone >= 0:
         suffix = 'GMT+%02d00' % timezone
     else:
         suffix = 'GTM+%02d00' % (-timezone)
     time_fmt = '%s%s' % (time_fmt, suffix)
-    return time.strftime(time_fmt, time.gmtime(time.time()+timezone_seconds))
+    return time.strftime(time_fmt, time.gmtime(input_time+timezone_seconds))
 
-def write_log(name, action, body):
-    return
+def write_log(primary_key, action, body):
     timestamp = int(time.time())
-    log_collection = db[name]
-    log_document = {'_id': timestamp,
+    version_collection = db[primary_key]
+    version_document = {'_id': timestamp,
                     'action': action,
                     'body': body}
-    log_collection.insert(log_document)
+    version_collection.insert(version_document)
 
 class AccountLines():
     def __init__(self, titles):
@@ -355,6 +355,20 @@ def do_update_columns_format():
 
 def get_primary_name():
     return get_primary_column_name()
+
+def get_versions(primary_key, limit, skip):
+    version_collection = db[primary_key]
+    items = version_collection.find().sort('_id', DESCENDING).skip(skip).limit(limit)
+    versions = []
+    for item in items:
+        version = {}
+        version['raw_date'] = item['_id']
+        version['date'] = make_timestamp(item['_id'])
+        version['action'] = item['action']
+        version['summary'] = json.dumps(item['body'], indent=2).replace('\n', '&#10;').replace('"','')
+        versions.append(version)
+    print(versions)
+    return versions
 
 def get_search_op():
     return search_op

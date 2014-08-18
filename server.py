@@ -15,7 +15,7 @@ from flask.ext.login import LoginManager , login_required , UserMixin , login_us
 
 from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
     get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines, \
-    get_primary_name
+    get_primary_name, get_versions
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -330,12 +330,15 @@ def history():
         return redirect(url_for('one_history', primary_key=primary_key))
     return render_template('history.html', primary_key=get_primary_name(), user=current_user)
 
-@app.route('/history/<primary_key>')
+@app.route('/history/<primary_key>', methods=['GET', 'POST'])
 @login_required
 def one_history(primary_key=None):
     if current_user.username != 'admin':
         return abort(403)
-    return unicode(primary_key)
+    if request.method == 'POST':
+        pass
+    versions = get_versions(primary_key, limit=1000, skip=0)
+    return render_template('one_history.html', primary_key=primary_key, versions=versions, user=current_user)
 
 if __name__ == '__main__':
     app.debug = True

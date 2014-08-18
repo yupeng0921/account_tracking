@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}history{% endblock %}
+
+{% block content %}
+<!-- <p title="hello&#10;title"> hello </p> -->
+<!-- <p title="test1&#10;title"> test1 </p> -->
+<table class="table table-bordered">
+{% for version in versions %}
+<tr class="active">
+  <td>
+	{{version.date}}
+  </td>
+  <td>
+	{{version.action}}
+  </td>
+  <td>
+	<a href=/history/{{primary_key}}/{{version.raw_date}} title="{{version.summary|safe}}">detail</a>
+  </td>
+</tr>
+{% endfor %}
+{% endblock %}
