@@ -14,7 +14,8 @@ from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user, current_user
 
 from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
-    get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines
+    get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines, \
+    get_primary_key
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -319,6 +320,14 @@ def profile():
     profile = get_columns_format()
     return render_template('profile.html', profile=profile, user=current_user)
 
+@app.route('/history', methods=['GET', 'POST'])
+@login_required
+def history():
+    if current_user.username != 'admin':
+        return abort(403)
+    if request.method == 'POST':
+        pass
+    return render_template('history.html', primary_key=get_primary_key(), user=current_user)
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=80)

@@ -353,6 +353,9 @@ def do_update_columns_format():
             op = class_type.get_search_op()
             search_op.append(op)
 
+def get_primary_key():
+    return get_primary_column_name()
+
 def get_search_op():
     return search_op
 
