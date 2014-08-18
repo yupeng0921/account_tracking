@@ -48,8 +48,7 @@ def make_timestamp(input_time):
     time_fmt = '%s%s' % (time_fmt, suffix)
     return time.strftime(time_fmt, time.gmtime(input_time+timezone_seconds))
 
-def write_log(primary_key, action, body):
-    timestamp = int(time.time())
+def write_log(primary_key, timestamp, action, body):
     version_collection = db[primary_key]
     version_document = {'_id': timestamp,
                     'action': action,
@@ -67,6 +66,7 @@ class AccountLines():
             raise Exception('no primary column: %s' % self.primary_column_name)
         self.titles = titles
         self.lines = []
+        self.timestamp = int(time.time())
     def add_line(self, values):
         column_objs = []
         for title in self.titles:
@@ -80,7 +80,7 @@ class AccountLines():
         self.lines.append(column_objs)
     def _insert(self, keypairs):
         logging.debug('insert: %s' % keypairs)
-        write_log(keypairs['_id'], 'insert', keypairs)
+        write_log(keypairs['_id'], self.timestamp, 'insert', keypairs)
         ret = accounts_collection.insert(keypairs)
     def create_account(self):
         for column_objs in self.lines:
@@ -94,7 +94,7 @@ class AccountLines():
             self._insert(keypairs)
     def _update(self, primary, keypairs):
         logging.debug('update: %s %s' % (primary, keypairs))
-        write_log(primary['_id'], 'update', keypairs)
+        write_log(primary['_id'], self.timestamp, 'update', keypairs)
         ret = accounts_collection.update(primary, {'$set': keypairs})
     def update_account(self):
         for column_objs in self.lines:
@@ -111,7 +111,7 @@ class AccountLines():
             self._update(primary, keypairs)
     def _delete(self, primary):
         logging.debug('delete: %s' % primary)
-        write_log(primary['_id'], 'delete', primary)
+        write_log(primary['_id'], self.timestamp, 'delete', primary)
         ret = accounts_collection.remove(primary)
     def delete_account(self):
         primary = None
@@ -315,7 +315,7 @@ def set_columns(columns):
         else:
             keypairs.update({name: value})
     assert condition
-    write_log(condition['_id'], 'edit', keypairs)
+    write_log(condition['_id'], int(time.time()), 'edit', keypairs)
     accounts_collection.update(condition, keypairs)
 
 def get_scripts():
