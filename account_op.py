@@ -30,6 +30,7 @@ graph_type_key = conf['graph_type_key']
 graph_members_key = conf['graph_members_key']
 columns_format_collection_name = conf['columns_format_collection_name']
 columns_format_key = conf['columns_format_key']
+user_collection_name = conf['user_collection_name']
 timezone = conf['timezone']
 timezone_seconds = timezone * 3600
 
@@ -38,6 +39,7 @@ db = client[db_name]
 accounts_collection = db[accounts_collection_name]
 scripts_collection = db[scripts_collection_name]
 columns_format_collection = db[columns_format_collection_name]
+user_collection = db[user_collection_name]
 
 def make_timestamp(input_time):
     time_fmt = '%Y-%m-%dT%H:%M:%S'
@@ -379,6 +381,12 @@ def get_version(primary_key, raw_date):
         return json.dumps(version['body'], indent=2).replace('"','')
     else:
         return ''
+
+def get_raw_user(username):
+    return user_collection.find_one({'_id': username})
+
+def set_raw_user(username, password_md5):
+    user_collection.insert({'_id': username, 'password_md5': password_md5})
 
 def get_search_op():
     return search_op

@@ -8,6 +8,7 @@ import zipfile
 import logging
 import traceback
 import csv
+import hashlib
 from uuid import uuid4
 from flask import Flask, request, redirect, url_for, render_template, abort, Response, make_response
 from werkzeug import secure_filename
@@ -15,7 +16,7 @@ from flask.ext.login import LoginManager , login_required , UserMixin , login_us
 
 from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
     get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines, \
-    get_primary_name, get_versions, get_version
+    get_primary_name, get_versions, get_version, get_raw_user, set_raw_user
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -39,10 +40,10 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 class User(UserMixin):
-    def __init__(self, username, password, userid, active=True):
+    def __init__(self, username, password_md5, userid, active=True):
         self.userid = userid
         self.username = username
-        self.password = password
+        self.password_md5 = password_md5
         self.active = active
     def get_id(self):
         return self.userid
@@ -50,30 +51,34 @@ class User(UserMixin):
         return self.active
 
 class UsersRepository():
-    def __init__(self):
-        self.users_id = dict()
-        self.users_name = dict()
-        self.identifier = 0
-    def save_user(self, user):
-        self.users_id[user.userid] = user
-        self.users_name[user.username] = user
+    def __init__(self, admin_user):
+        self.admin_user = admin_user
     def get_user_by_name(self, username):
-        return self.users_name.get(username)
+        if username == self.admin_user.username:
+            return self.admin_user
+        else:
+            return self.get_user_from_db(username)
     def get_user_by_id(self, userid):
-        return self.users_id.get(userid)
-    def next_index(self):
-        self.identifier += 1
-        return self.identifier
-
-users_repository = UsersRepository()
+        if userid == self.admin_user.username:
+            return self.admin_user
+        else:
+            return self.get_user_from_db(userid)
+    # assume username and userid are the same value
+    def get_user_from_db(self, name_or_id):
+        raw_user = get_raw_user(name_or_id)
+        if not raw_user:
+            return None
+        password_md5 = raw_user['password_md5']
+        return User(name_or_id, password_md5, name_or_id)
 
 with open(login_file) as f:
     login_profile = yaml.safe_load(f)
-for user in login_profile['users']:
-    username = user['username']
-    password = user['password']
-    new_user = User(username, password, users_repository.next_index())
-    users_repository.save_user(new_user)
+
+admin_username = login_profile['admin_username']
+admin_password = unicode(login_profile['admin_password'])
+admin_password_md5 = hashlib.md5(admin_password).hexdigest()
+admin_user = User(admin_username, admin_password_md5, admin_username)
+users_repository = UsersRepository(admin_user)
 
 @login_manager.user_loader
 def load_user(userid):
@@ -94,13 +99,11 @@ def login():
         password = request.form['password']
         registeredUser = users_repository.get_user_by_name(username)
         logging.info(registeredUser)
-        if registeredUser:
-            logging.info(registeredUser.password)
-        if registeredUser != None and unicode(registeredUser.password) == unicode(password):
+        if registeredUser != None and unicode(registeredUser.password_md5) == unicode(hashlib.md5(unicode(password)).hexdigest()):
             login_user(registeredUser)
             return redirect(request.args.get("next") or url_for("index"))
         else:
-            logging.warning('invalide username or password: %s %s' % (username, password))
+            logging.warning('invalide username or password for user %s' % username)
             return abort(401)
     else:
         return Response('''
@@ -115,7 +118,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 def do_upload(action, fullpath):
     f = open(fullpath, 'r')
