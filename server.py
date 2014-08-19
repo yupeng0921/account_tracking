@@ -16,7 +16,7 @@ from flask.ext.login import LoginManager , login_required , UserMixin , login_us
 
 from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
     get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines, \
-    get_primary_name, get_versions, get_version, get_raw_user, set_raw_user
+    get_primary_name, get_versions, get_version, get_raw_user, set_raw_user, get_all_usernames, delete_raw_user
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -355,6 +355,33 @@ def show_version_body(primary_key=None, raw_date=None):
     version_body = get_version(primary_key, raw_date)
     return render_template('version_body.html', version_body=version_body, user=current_user)
 
+@app.route('/users', methods=['GET', 'POST'])
+@login_required
+def users_management():
+    if current_user.username != 'admin':
+        return abort(403)
+    if request.method == 'POST':
+        action = request.args.get('action')
+        if action == 'create':
+            username = request.form['username_text']
+            if len(username) < 1:
+                return 'username should at least 1 character: [%s]' % username
+            password = request.form['password_text']
+            if len(password) < 3:
+                return 'password should has at least 3 characters'
+            password_md5 = hashlib.md5(password).hexdigest()
+            try:
+                set_raw_user(username, password_md5)
+            except Exception, e:
+                return unicode(e)
+        elif action == 'delete':
+            username = request.args.get('username')
+            delete_raw_user(username)
+        else:
+            return 'unknow action: %s' % action
+        return redirect(url_for('users_management'))
+    usernames = get_all_usernames()
+    return render_template('users.html', usernames=usernames, user=current_user)
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=80)

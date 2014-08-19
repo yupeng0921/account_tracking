@@ -4,10 +4,8 @@
 
 {% block content %}
 <form role="form" action="/script?action=upload" method="post" enctype="multipart/form-data">
-  <div class="form-group">
-	<label for="script_file">script file</label>
-	<input type="file" id="script_file" name="script_file">
-  </div>
+  <label for="script_file">script file</label>
+  <input type="file" id="script_file" name="script_file">
   <button type="submit" class="btn btn-default" id="submit" name="submit">Submit</button>
 </form>
 
