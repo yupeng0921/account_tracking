@@ -363,6 +363,11 @@ def generate_columns_profile(body):
     global g_all_classes
     global g_searchable_classes
 
+    g_class_dict = {}
+    g_primary_column_name = None
+    g_all_classes = []
+    g_searchable_classes = []
+
     body = json.loads(body)
     profile = body['profile']
     for name in profile:

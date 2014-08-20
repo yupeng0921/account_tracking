@@ -11,8 +11,8 @@ graph_name_key: graph_name
 graph_type_key: graph_type
 graph_members_key: members
 login_file: /tmp/account_tracking_login.yaml
-columns_format_collection_name: columns_format
-columns_format_key: columns_format_key
+profile_collection_name: profile_collection
+profile_key: profile_key
 timezone: 8
 log_region: ap-northeast-1
 log_bucket_name: accounttrackinglog

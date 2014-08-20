@@ -28,8 +28,8 @@ awk_timeout = conf['awk_timeout']
 graph_name_key = conf['graph_name_key']
 graph_type_key = conf['graph_type_key']
 graph_members_key = conf['graph_members_key']
-columns_format_collection_name = conf['columns_format_collection_name']
-columns_format_key = conf['columns_format_key']
+profile_collection_name = conf['profile_collection_name']
+profile_key = conf['profile_key']
 user_collection_name = conf['user_collection_name']
 timezone = conf['timezone']
 timezone_seconds = timezone * 3600
@@ -38,7 +38,7 @@ client = MongoClient(mongodb_addr, mongodb_port)
 db = client[db_name]
 accounts_collection = db[accounts_collection_name]
 scripts_collection = db[scripts_collection_name]
-columns_format_collection = db[columns_format_collection_name]
+profile_collection = db[profile_collection_name]
 user_collection = db[user_collection_name]
 
 def make_timestamp(input_time):
@@ -58,7 +58,36 @@ def write_log(primary_key, timestamp, username, action, body):
                         'body': body}
     version_collection.insert(version_document)
 
+search_op = []
+reload_time = 0
+def reload_profile():
+    global search_op
+    global reload_time
+    item = profile_collection.find_one({'_id': profile_key})
+    reload_time = item['timestamp']
+    body = item['body']
+    generate_columns_profile(body)
+    searchable_class = get_searchable_classes()
+    class_dict = get_class_dict()
+    for class_name in searchable_class:
+        class_type = class_dict[class_name]
+        op = class_type.get_search_op()
+        search_op.append(op)
+
+def check_and_reload_profile():
+    item = profile_collection.find_one({'_id': profile_key}, {'timestamp': 1})
+    if item and item['timestamp'] > reload_time:
+        reload_profile()
+
+def check_profile(func):
+    def _check_profile(*args, **kwargs):
+        check_and_reload_profile()
+        ret = func(*args, **kwargs)
+        return ret
+    return _check_profile
+
 class AccountLines():
+    @check_profile
     def __init__(self, titles, timestamp, username):
         self.class_dict = get_class_dict()
         self.primary_column_name = get_primary_column_name()
@@ -129,7 +158,7 @@ class AccountLines():
             assert primary
             self._delete(primary)
 
-search_op = []
+@check_profile
 def do_search(params):
     all_classes = get_all_classes()
     class_dict = get_class_dict()
@@ -165,6 +194,7 @@ def do_search(params):
     result['lines'] = lines
     return result
 
+@check_profile
 def generate_csv(params):
     class_dict = get_class_dict()
     primary_column_name = get_primary_column_name()
@@ -199,6 +229,7 @@ def generate_csv(params):
     lines = '\n'.join(lines)
     return lines
 
+@check_profile
 def do_search_and_run_script(params, script_name):
     class_dict = get_class_dict()
     primary_column_name = get_primary_column_name()
@@ -277,6 +308,7 @@ def get_columns(primary_key=None):
     else:
         return get_columns_by_key(primary_key)
 
+@check_profile
 def get_columns_by_key(primary_key):
     all_classes = get_all_classes()
     primary_column_name = get_primary_column_name()
@@ -295,6 +327,7 @@ def get_columns_by_key(primary_key):
         columns.append(column)
     return columns
 
+@check_profile
 def get_columns_skeleton():
     all_classes = get_all_classes()
     class_dict = get_class_dict()
@@ -305,6 +338,7 @@ def get_columns_skeleton():
         columns.append(column)
     return columns
 
+@check_profile
 def set_columns(columns, username, timestamp):
     class_dict = get_class_dict()
     primary_column_name = get_primary_column_name()
@@ -343,20 +377,7 @@ def get_script_body_by_name(script_name):
     ret = scripts_collection.find_one({'_id': script_name})
     return ret['body']
 
-def do_update_columns_format():
-    global search_op
-    search_op = []
-    class_dict = get_class_dict()
-    item = columns_format_collection.find_one({'_id': columns_format_key})
-    if item:
-        body = item['body']
-        generate_columns_profile(body)
-        searchable_class = get_searchable_classes()
-        for class_name in searchable_class:
-            class_type = class_dict[class_name]
-            op = class_type.get_search_op()
-            search_op.append(op)
-
+@check_profile
 def get_primary_name():
     return get_primary_column_name()
 
@@ -398,23 +419,22 @@ def get_all_usernames():
         usernames.append(item['_id'])
     return usernames
 
+@check_profile
 def get_search_op():
     return search_op
 
-def update_columns_format(columns_format_filename):
-    with open(columns_format_filename, 'r') as f:
+def update_profile(profile_filename):
+    with open(profile_filename, 'r') as f:
         file_content = f.read()
     try:
-        columns_format_collection.insert({'_id': columns_format_key, 'body': file_content})
+        timestamp = int(time.time())
+        profile_collection.insert({'_id': profile_key, 'timestamp': timestamp, 'body': file_content})
     except Exception, e:
-        columns_format_collection.update({'_id': columns_format_key}, {'body': file_content})
-    do_update_columns_format()
+        profile_collection.update({'_id': profile_key}, {'timestamp': timestamp, 'body': file_content})
 
-def get_columns_format():
-    item = columns_format_collection.find_one({'_id': columns_format_key})
+def get_profile():
+    item = profile_collection.find_one({'_id': profile_key})
     if item:
         return item['body']
     else:
         return ''
-
-do_update_columns_format()

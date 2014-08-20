@@ -14,8 +14,8 @@ from flask import Flask, request, redirect, url_for, render_template, abort, Res
 from werkzeug import secure_filename
 from flask.ext.login import LoginManager , login_required , UserMixin , login_user, logout_user, current_user
 
-from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_columns_format, \
-    get_columns_format, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines, \
+from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_profile, \
+    get_profile, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines, \
     get_primary_name, get_versions, get_version, get_raw_user, set_raw_user, get_all_usernames, delete_raw_user
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
@@ -313,18 +313,18 @@ def profile():
     if current_user.username != 'admin':
         return abort(403)
     if request.method == 'POST':
-        columns_format_file = request.files['columns_format_file']
-        filename = secure_filename(columns_format_file.filename)
-        columns_format_filename = os.path.join(current_file_full_path, upload_folder, filename)
-        columns_format_file.save(columns_format_filename)
+        profile_file = request.files['profile_file']
+        filename = secure_filename(profile_file.filename)
+        profile_filename = os.path.join(current_file_full_path, upload_folder, filename)
+        profile_file.save(profile_filename)
         try:
-            update_columns_format(columns_format_filename)
+            update_profile(profile_filename)
         except Exception, e:
-            os.remove(columns_format_filename)
+            os.remove(profile_filename)
             return unicode(e)
-        os.remove(columns_format_filename)
+        os.remove(profile_filename)
         return redirect(url_for('profile'))
-    profile = get_columns_format()
+    profile = get_profile()
     return render_template('profile.html', profile=profile, user=current_user)
 
 @app.route('/history', methods=['GET', 'POST'])
