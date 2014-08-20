@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import time
+import csv
 from uuid import uuid4
 from tempfile import TemporaryFile
 from subprocess import Popen, PIPE, STDOUT
@@ -209,24 +210,24 @@ def generate_csv(params):
         if value:
             keypairs.update({name: value})
     items = accounts_collection.find(keypairs)
-    lines = []
-    line = default_csv_delimiter.join(all_classes)
-    lines.append(line)
-    for item in items:
-        csv_columns =[]
-        primary_key = item['_id']
-        for name in all_classes:
-            class_type = class_dict[name]
-            if name == primary_column_name:
-                name = '_id'
-            if name in item:
-                csv_string = class_type.get_csv_string(item[name])
-            else:
-                csv_string = default_csv_string
-            csv_columns.append(csv_string)
-        line = default_csv_delimiter.join(csv_columns)
-        lines.append(line)
-    lines = '\n'.join(lines)
+    with TemporaryFile() as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow(all_classes)
+        for item in items:
+            csv_columns =[]
+            primary_key = item['_id']
+            for name in all_classes:
+                class_type = class_dict[name]
+                if name == primary_column_name:
+                    name = '_id'
+                if name in item:
+                    csv_string = class_type.get_csv_string(item[name])
+                else:
+                    csv_string = default_csv_string
+                csv_columns.append(csv_string)
+            csv_writer.writerow(csv_columns)
+        f.seek(0)
+        lines = f.read()
     return lines
 
 @check_profile
