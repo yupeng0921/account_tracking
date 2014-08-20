@@ -14,12 +14,18 @@
   <tr>
 	<td> </td>
 	{% for title in result.titles %}
-	<td> {{title}} </td>
+	<td>
+	  <a href="/search/{{prev_search}}?sort={{title}}"> {{title}} </a>
+	</td>
 	{% endfor %}
   </tr>
   {% for line in result.lines %}
   <tr>
+	{% if sort_by %}
+	<td> <a href="/edit/{{line.primary_key}}?prev_search={{prev_search}}&sort={{sort_by}}"> edit </a> </td>
+	{% else %}
 	<td> <a href="/edit/{{line.primary_key}}?prev_search={{prev_search}}"> edit </a> </td>
+	{% endif %}
 	{% for column in line.columns %}
 	{% if column.color == "red" %}
 	<td class="danger"> {{column.html_string|safe}} </td>

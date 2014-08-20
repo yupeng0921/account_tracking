@@ -208,9 +208,10 @@ def search():
 @app.route('/search/<params>')
 @login_required
 def search_result(params):
+    sort_by = request.args.get('sort')
     j_params = json.loads(params)
-    result = do_search(j_params)
-    return render_template('search_result.html', result=result, params=params, user=current_user, prev_search=params)
+    result = do_search(j_params, sort_by)
+    return render_template('search_result.html', result=result, params=params, user=current_user, prev_search=params, sort_by=sort_by)
 
 @app.route('/search/<params>/<script>')
 @login_required
@@ -253,8 +254,9 @@ def edit_item(primary_key):
                 abort(500)
         set_columns(columns, username=current_user.username, timestamp=int(time.time()))
         prev_search = request.args.get('prev_search')
+        sort_by = request.args.get('sort')
         if prev_search:
-            return redirect(url_for('search_result', params=prev_search))
+            return redirect(url_for('search_result', params=prev_search, sort=sort_by))
         else:
             return redirect(url_for('edit_item', primary_key=primary_key))
     columns = get_columns(primary_key)

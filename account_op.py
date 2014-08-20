@@ -160,7 +160,7 @@ class AccountLines():
             self._delete(primary)
 
 @check_profile
-def do_search(params):
+def do_search(params, sort_by):
     all_classes = get_all_classes()
     class_dict = get_class_dict()
     primary_column_name = get_primary_column_name()
@@ -176,6 +176,8 @@ def do_search(params):
         if value:
             keypairs.update({name: value})
     items = accounts_collection.find(keypairs)
+    if sort_by:
+        items = items.sort(sort_by)
     lines = []
     for item in items:
         columns = []
