@@ -266,8 +266,9 @@ def edit_item(primary_key):
 @app.route('/download/<params>')
 @login_required
 def download(params):
+    sort_by = request.args.get('sort')
     j_params = json.loads(params)
-    result = generate_csv(j_params)
+    result = generate_csv(j_params, sort_by)
     response = make_response(result)
     response.headers["Content-Disposition"] = "attachment; filename=download.csv"
     return response

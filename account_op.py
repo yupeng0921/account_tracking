@@ -198,7 +198,7 @@ def do_search(params, sort_by):
     return result
 
 @check_profile
-def generate_csv(params):
+def generate_csv(params, sort_by):
     class_dict = get_class_dict()
     primary_column_name = get_primary_column_name()
     all_classes = get_all_classes()
@@ -212,6 +212,8 @@ def generate_csv(params):
         if value:
             keypairs.update({name: value})
     items = accounts_collection.find(keypairs)
+    if sort_by:
+        items = items.sort(sort_by)
     with TemporaryFile() as f:
         csv_writer = csv.writer(f)
         csv_writer.writerow(all_classes)

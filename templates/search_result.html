@@ -7,7 +7,11 @@
   <div class="col-md-9">
   </div>
   <div class="col-md-3">
+	{% if sort_by %}
+	<a href="/download/{{params}}?sort={{sort_by}}"> download </a>
+	{% else %}
 	<a href="/download/{{params}}"> download </a>
+	{% endif %}
   </div>
 </div>
 <table class="table table-bordered">
