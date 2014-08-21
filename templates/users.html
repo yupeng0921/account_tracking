@@ -25,15 +25,17 @@
 
 {% for username in usernames %}
 <p></p>
-<div clas="row">
+<div class="row">
   <div class="col-md-1">
 	<label> {{username}} </label>
   </div>
-  <div class="col-md=1">
+  {% if username != "admin" %}
+  <div class="col-md-1">
 	<form role="form" action="/users?action=delete&username={{username}}" method="post">
 	  <button type="submit" class="btn btn-default" id="delete_{{username}}_submit" name="delete_{{username}}_submit">delete</button>
 	</form>
   </div>
+  {% endif %}
 </div>
 {% endfor %}
 {% endblock %}
