@@ -414,6 +414,9 @@ def get_raw_user(username):
 def set_raw_user(username, password_md5):
     user_collection.insert({'_id': username, 'password_md5': password_md5})
 
+def update_raw_user(username, password_md5):
+    user_collection.update({'_id': username}, {'password_md5': password_md5})
+
 def delete_raw_user(username):
     user_collection.remove({'_id': username})
 

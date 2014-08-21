@@ -16,7 +16,7 @@ from flask.ext.login import LoginManager , login_required , UserMixin , login_us
 
 from account_op import get_search_op, do_search, get_columns, set_columns, get_scripts, generate_csv, update_profile, \
     get_profile, upload_script, delete_script, do_search_and_run_script, get_script_body_by_name, AccountLines, \
-    get_primary_name, get_versions, get_version, get_raw_user, set_raw_user, get_all_usernames, delete_raw_user
+    get_primary_name, get_versions, get_version, get_raw_user, set_raw_user, get_all_usernames, delete_raw_user, update_raw_user
 
 current_file_full_path = os.path.split(os.path.realpath(__file__))[0]
 with open(os.path.join(current_file_full_path, 'conf.yaml'), 'r') as f:
@@ -51,18 +51,10 @@ class User(UserMixin):
         return self.active
 
 class UsersRepository():
-    def __init__(self, admin_user):
-        self.admin_user = admin_user
     def get_user_by_name(self, username):
-        if username == self.admin_user.username:
-            return self.admin_user
-        else:
-            return self.get_user_from_db(username)
+        return self.get_user_from_db(username)
     def get_user_by_id(self, userid):
-        if userid == self.admin_user.username:
-            return self.admin_user
-        else:
-            return self.get_user_from_db(userid)
+        return self.get_user_from_db(userid)
     # assume username and userid are the same value
     def get_user_from_db(self, name_or_id):
         raw_user = get_raw_user(name_or_id)
@@ -77,8 +69,11 @@ with open(login_file) as f:
 admin_username = login_profile['admin_username']
 admin_password = unicode(login_profile['admin_password'])
 admin_password_md5 = hashlib.md5(admin_password).hexdigest()
-admin_user = User(admin_username, admin_password_md5, admin_username)
-users_repository = UsersRepository(admin_user)
+try:
+    set_raw_user(admin_username, admin_password_md5)
+except Exception, e:
+    pass
+users_repository = UsersRepository()
 
 @login_manager.user_loader
 def load_user(userid):
@@ -385,6 +380,21 @@ def users_management():
         return redirect(url_for('users_management'))
     usernames = get_all_usernames()
     return render_template('users.html', usernames=usernames, user=current_user)
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    if request.method == 'POST':
+        username = current_user.username
+        password = request.form['password_text']
+        verify_password = request.form['verify_password_text']
+        if password != verify_password:
+            return 'password inconsistent'
+        password_md5 = hashlib.md5(password).hexdigest()
+        update_raw_user(username, password_md5)
+        return redirect(url_for('settings'))
+    return render_template('settings.html', user=current_user)
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=80)
