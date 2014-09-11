@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+#coding=utf-8
 
 import yaml
 import json
@@ -52,6 +53,7 @@ def make_timestamp(input_time):
     return time.strftime(time_fmt, time.gmtime(input_time+timezone_seconds))
 
 def write_log(primary_key, timestamp, username, action, body):
+    logging.debug('%s %s', primary_key, type(primary_key))
     version_collection = db[primary_key]
     version_document = {'_id': timestamp,
                         'username': username,

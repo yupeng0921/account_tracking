@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+#coding=utf-8
 
 import os
 import time
@@ -115,9 +116,25 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
+    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
+    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
+                            dialect=dialect, **kwargs)
+    for row in csv_reader:
+        # decode UTF-8 back to Unicode, cell by cell:
+        yield [unicode(cell, 'utf-8') for cell in row]
+
+def utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        yield line.encode('utf-8')
+        # yield line.decode('utf-8')
+
+import codecs
 def do_upload(action, fullpath):
-    f = open(fullpath, 'r')
-    csv_reader = csv.reader(f)
+    f = codecs.open(fullpath, 'r', 'utf-8')
+    # f = open(fullpath, 'r')
+    # csv_reader = csv.reader(f)
+    csv_reader = unicode_csv_reader(f)
     titles = csv_reader.next()
     titles = [title.strip() for title in titles]
     try:
