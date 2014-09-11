@@ -107,6 +107,10 @@ class AccountLines():
         column_objs = []
         for title in self.titles:
             value = values.pop(0)
+            if value and value[0] == '.':
+                value = value[1:]
+            if value and value[-1] == '.':
+                value = value[:-1]
             column_class = self.class_dict[title]
             if not value and column_class.get_name() == self.primary_column_name:
                 raise Exception('primary key %s should not be empty' % self.primary_column_name)

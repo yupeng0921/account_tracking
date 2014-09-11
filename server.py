@@ -73,6 +73,7 @@ admin_password_md5 = hashlib.md5(admin_password).hexdigest()
 try:
     set_raw_user(admin_username, admin_password_md5)
 except Exception, e:
+    print(str(e))
     pass
 users_repository = UsersRepository()
 
