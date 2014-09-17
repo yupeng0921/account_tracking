@@ -11,6 +11,7 @@ from uuid import uuid4
 from tempfile import TemporaryFile
 from subprocess import Popen, PIPE, STDOUT
 from pymongo import MongoClient, DESCENDING
+from unicode_csv import UnicodeWriter
 # from column_op import g_class_dict, g_all_classes, g_searchable_classes, g_primary_column_name, generate_columns_profile
 # import column_op
 from column_op import get_class_dict, get_all_classes, get_searchable_classes, get_primary_column_name, generate_columns_profile
@@ -221,7 +222,8 @@ def generate_csv(params, sort_by):
     if sort_by:
         items = items.sort(sort_by)
     with TemporaryFile() as f:
-        csv_writer = csv.writer(f)
+        # csv_writer = csv.writer(f)
+        csv_writer = UnicodeWriter(f)
         csv_writer.writerow(all_classes)
         for item in items:
             csv_columns =[]
