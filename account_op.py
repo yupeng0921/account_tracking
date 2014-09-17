@@ -73,6 +73,7 @@ def reload_profile():
     generate_columns_profile(body)
     searchable_class = get_searchable_classes()
     class_dict = get_class_dict()
+    search_op = []
     for class_name in searchable_class:
         class_type = class_dict[class_name]
         op = class_type.get_search_op()
